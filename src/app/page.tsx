@@ -1,8 +1,5 @@
 "use client";
 
-import WalletConnect from "@/components/WalletConnect";
-import WalletModal from "@/components/WalletModal";
-
 import React, { FC, useMemo, useEffect, useState } from "react";
 import {
 	ConnectionProvider,
