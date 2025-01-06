@@ -1,7 +1,9 @@
+import WalletConnect from "@/components/WalletConnect";
+
 export default function Home() {
   return (
-    <div>
-      <h1>Home</h1>
+    <div className="display-flex flex-column align-center justify-center">
+      <WalletConnect />
     </div>
     
   );
