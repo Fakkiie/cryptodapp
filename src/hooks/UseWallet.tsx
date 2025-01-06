@@ -1,5 +1,6 @@
 export default function UseWallet() {
 	const handleConnectWallet = async () => {
+		console.log(window);
 		if (window.nestwallet.solana) {
 			console.log("Nest Wallet detected!");
 
