@@ -40,9 +40,10 @@ export default function WalletBalance() {
 			return;
 		}
 
+		console.log(await endpoint.connection.getAccountInfo(publicKey));
+
 		setLoading(true);
 		try {
-			// Fetch SOL balance
 			const sol = await getTokenBalance({
 				publicKey: publicKey,
 				tokenMintAddress: null,
@@ -53,6 +54,7 @@ export default function WalletBalance() {
 			// Replace this with a real token mint address
 			const exampleTokenMint =
 				"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+
 			const token = await getTokenBalance({
 				publicKey,
 				tokenMintAddress: exampleTokenMint,

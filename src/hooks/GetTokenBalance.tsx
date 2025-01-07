@@ -19,7 +19,6 @@ export default async function getTokenBalance({
 
 		// If tokenMintAddress is null or undefined, fetch SOL balance
 		if (!tokenMintAddress) {
-			console.log(publicKey);
 			const balanceInLamports = await connection.getBalance(publicKey);
 			console.log(balanceInLamports);
 			return {
@@ -29,16 +28,13 @@ export default async function getTokenBalance({
 			};
 		}
 
-		// Convert the token mint address to a PublicKey object
+		// For SPL tokens, fetch token account balance
 		const tokenMintPublicKey = new PublicKey(tokenMintAddress);
-
-		// Find the associated token account for the wallet
 		const associatedTokenAddress = await getAssociatedTokenAddress(
 			tokenMintPublicKey,
 			publicKey
 		);
 
-		// Fetch the token account balance
 		const tokenAccountBalance = await connection.getTokenAccountBalance(
 			associatedTokenAddress
 		);
@@ -47,9 +43,10 @@ export default async function getTokenBalance({
 			balance: tokenAccountBalance.value.uiAmount,
 			decimals: tokenAccountBalance.value.decimals,
 			amount: tokenAccountBalance.value.amount,
+			token: tokenMintAddress, // Indicate token mint address
 		};
 	} catch (error) {
-		console.error("Error fetching token balance:", error);
+		console.error("Error fetching balance:", error);
 		return null;
 	}
 }

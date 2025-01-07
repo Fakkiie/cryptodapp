@@ -22,9 +22,10 @@ require("@/styles/solana-ui.css");
 export default function Home() {
 	// The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
 	const network = WalletAdapterNetwork.Devnet;
-
 	// You can also provide a custom RPC endpoint.
-	const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+	// const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+	const endpoint =
+		"https://solana-devnet.g.alchemy.com/v2/HzuRRQGwMGrcS955Yoy0hWDtAxG9VfF7";
 
 	const wallets = useMemo(
 		() => [
