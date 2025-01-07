@@ -13,9 +13,10 @@ import {
 	WalletMultiButton,
 } from "@solana/wallet-adapter-react-ui";
 import { clusterApiUrl } from "@solana/web3.js";
+import Message from "@/components/Message";
 
 // Default styles that can be overridden by your app
-require("@solana/wallet-adapter-react-ui/styles.css");
+require("@/styles/solana-ui.css");
 
 export default function Home() {
 	// The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
@@ -25,7 +26,10 @@ export default function Home() {
 	const endpoint = useMemo(() => clusterApiUrl(network), [network]);
 
 	const wallets = useMemo(
-		() => [new UnsafeBurnerWalletAdapter()],
+		() => [
+			// This is where default wallets are added
+			// new UnsafeBurnerWalletAdapter()
+		],
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[network]
 	);
@@ -37,7 +41,7 @@ export default function Home() {
 					<WalletModalProvider>
 						<WalletMultiButton />
 						<WalletDisconnectButton />
-						{/* Your app's components go here, nested within the context providers. */}
+						<Message />
 					</WalletModalProvider>
 				</WalletProvider>
 			</ConnectionProvider>
