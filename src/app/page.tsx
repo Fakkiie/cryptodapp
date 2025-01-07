@@ -15,7 +15,6 @@ import {
 import { clusterApiUrl } from "@solana/web3.js";
 import Message from "@/components/Message";
 import WalletBalance from "@/components/WalletBalance";
-
 import ChartWidget from "@/components/ChartWidget";
 // Default styles that can be overridden by your app
 require("@/styles/solana-ui.css");

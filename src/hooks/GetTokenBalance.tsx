@@ -3,7 +3,7 @@ import { getAssociatedTokenAddress } from "@solana/spl-token";
 
 interface TokenBalanceProps {
 	publicKey: PublicKey;
-	tokenMintAddress: string;
+	tokenMintAddress: string | null;
 	connection: Connection;
 }
 export default async function getTokenBalance({
@@ -15,6 +15,16 @@ export default async function getTokenBalance({
 		if (!publicKey) {
 			console.error("Wallet not connected");
 			return null;
+		}
+
+		// If tokenMintAddress is null or undefined, fetch SOL balance
+		if (!tokenMintAddress) {
+			const balanceInLamports = await connection.getBalance(publicKey);
+			return {
+				balance: balanceInLamports / 1e9, // Convert lamports to SOL
+				rawBalance: balanceInLamports, // Raw lamports value
+				token: "SOL", // Indicate it's SOL
+			};
 		}
 
 		// Convert the token mint address to a PublicKey object

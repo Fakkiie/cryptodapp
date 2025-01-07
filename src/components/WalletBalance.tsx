@@ -12,18 +12,18 @@ export default function WalletBalance() {
 		decimals: number;
 		amount: string;
 	} | null>();
-	const [tokenMintAddress, setTokenMintAddress] = useState(
-		"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-	);
+	const [tokenMintAddress, setTokenMintAddress] = useState(null);
 
-	useMemo(() => {
+	useMemo(async () => {
 		if (!publicKey) return;
 
-		const balanceInfo = getTokenBalance({
+		const balanceInfo = await getTokenBalance({
 			publicKey,
 			tokenMintAddress,
 			connection: endpoint.connection,
 		});
+
+		console.log(balanceInfo);
 	}, [publicKey, tokenMintAddress]);
 
 	return (
