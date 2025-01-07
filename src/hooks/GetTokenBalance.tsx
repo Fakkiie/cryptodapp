@@ -19,7 +19,9 @@ export default async function getTokenBalance({
 
 		// If tokenMintAddress is null or undefined, fetch SOL balance
 		if (!tokenMintAddress) {
+			console.log(publicKey);
 			const balanceInLamports = await connection.getBalance(publicKey);
+			console.log(balanceInLamports);
 			return {
 				balance: balanceInLamports / 1e9, // Convert lamports to SOL
 				rawBalance: balanceInLamports, // Raw lamports value
