@@ -16,6 +16,7 @@ import { clusterApiUrl } from "@solana/web3.js";
 import Message from "@/components/Message";
 import WalletBalance from "@/components/WalletBalance";
 
+import ChartWidget from "@/components/ChartWidget";
 // Default styles that can be overridden by your app
 require("@/styles/solana-ui.css");
 
@@ -44,6 +45,7 @@ export default function Home() {
 						<WalletDisconnectButton />
 						<Message />
 						<WalletBalance />
+						<ChartWidget baseCoin="ETH" quoteCoin="USD" />
 					</WalletModalProvider>
 				</WalletProvider>
 			</ConnectionProvider>
