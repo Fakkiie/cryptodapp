@@ -1,21 +1,19 @@
 import { ConnectionContext, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import React, { useContext, useState, useEffect, useMemo } from "react";
+import React, { useContext, useState } from "react";
 import getTokenBalance, { TokenBalanceReturn } from "../hooks/GetTokenBalance";
 
 export default function WalletBalance() {
 	const { publicKey } = useWallet();
 	const endpoint = useContext(ConnectionContext);
 
-	const [balanceInfo, setBalanceInfo] = useState<{
-		balance: number | null;
-		decimals: number;
-		amount: string;
-	} | null>();
-	const [tokenMintAddress, setTokenMintAddress] = useState(null);
+	// const [tokenMintAddress, setTokenMintAddress] = useState(null);
 	const [solBalance, setSolBalance] = useState<TokenBalanceReturn | null>(
 		null
 	);
+	// const [balanceInfo, setBalanceInfo] = useState<TokenBalanceReturn | null>(
+	// 	null
+	// );
 	const [tokenBalance, setTokenBalance] = useState<TokenBalanceReturn | null>(
 		null
 	);

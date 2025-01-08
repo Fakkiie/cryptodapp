@@ -14,8 +14,7 @@ import {
 import Message from "@/components/Message";
 import WalletBalance from "@/components/WalletBalance";
 import ChartWidget from "@/components/ChartWidget";
-// Default styles that can be overridden by your app
-require("@/styles/solana-ui.css");
+import "@/styles/solana-ui.css";
 
 export default function Home() {
 	// The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
