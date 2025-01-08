@@ -4,7 +4,7 @@ import React, { useEffect, useState, useContext, useMemo } from "react";
 import NoImage from "@/assets/no-image-icon-6.png";
 import { useWallet, ConnectionContext } from "@solana/wallet-adapter-react";
 import getTokenBalance from "../hooks/GetTokenBalance";
-import { set } from "@project-serum/anchor/dist/cjs/utils/features";
+import { VersionedTransaction } from "@solana/web3.js";
 
 export interface Token {
 	address: string;
@@ -27,7 +27,7 @@ export default function TokenSelector({
 	baseCoin,
 	quoteCoin,
 }: TokenSelectorProps) {
-	const { publicKey } = useWallet();
+	const { publicKey, signTransaction, wallet } = useWallet();
 	const endpoint = useContext(ConnectionContext);
 
 	const [tokens, setTokens] = useState<Token[]>([]);
@@ -43,6 +43,7 @@ export default function TokenSelector({
 	const [quoteCoinBalance, setQuoteCoinBalance] = useState<string | null>(
 		"Loading..."
 	);
+	const [quoteResponse, setQuoteResponse] = useState<any | null>(null);
 
 	// Fetch the token list
 	useEffect(() => {
@@ -159,6 +160,63 @@ export default function TokenSelector({
 			setBuyingAmount(
 				quoteResponse.outAmount / Math.pow(10, quoteCoin.decimals)
 			);
+			setQuoteResponse(quoteResponse);
+		}
+	};
+
+	const handleSwapTransaction = async (quoteResponse: any) => {
+		if (!publicKey || !signTransaction) {
+			console.error(
+				"Wallet not connected or does not support signing transactions"
+			);
+			return;
+		} else if (!quoteResponse) {
+			console.error("No quote response available");
+			return;
+		}
+		const { swapTransaction } = await (
+			await fetch("https://quote-api.jup.ag/v6/swap", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					quoteResponse,
+					userPublicKey: publicKey.toBase58(),
+					wrapAndUnwrapSol: true,
+				}),
+			})
+		).json();
+
+		try {
+			const swapTransactionBuf = Buffer.from(swapTransaction, "base64");
+			const transaction =
+				VersionedTransaction.deserialize(swapTransactionBuf);
+			const signedTransaction = await signTransaction(transaction);
+
+			const rawTransaction = signedTransaction.serialize();
+			const txid = await endpoint.connection.sendRawTransaction(
+				rawTransaction,
+				{
+					skipPreflight: true,
+					maxRetries: 2,
+				}
+			);
+
+			const latestBlockHash =
+				await endpoint.connection.getLatestBlockhash();
+			await endpoint.connection.confirmTransaction(
+				{
+					blockhash: latestBlockHash.blockhash,
+					lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+					signature: txid,
+				},
+				"confirmed"
+			);
+
+			console.log(`https://solscan.io/tx/${txid}`);
+		} catch (error) {
+			console.error("Error signing or sending the transaction:", error);
 		}
 	};
 
@@ -208,14 +266,16 @@ export default function TokenSelector({
 					/>
 				</div>
 			</div>
-
-			<button
-				onClick={handleSwapTokens}
-				className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white mb-6 hover:bg-blue-600 transition-all"
-				aria-label="Swap tokens"
-			>
-				⇅
-			</button>
+			<div className="relative h-fit items-center justify-center flex">
+				<div className="absolute top-1/2 -translate-y-1/2 w-full bg-gray-800 h-[1px]" />
+				<button
+					onClick={handleSwapTokens}
+					className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white mb-6 hover:bg-blue-600 transition-all"
+					aria-label="Swap tokens"
+				>
+					⇅
+				</button>
+			</div>
 
 			{/* Buying Section */}
 			<div className="flex flex-col w-full text-left">
@@ -245,7 +305,11 @@ export default function TokenSelector({
 					/>
 				</div>
 			</div>
-			<button className="w-full rounded-lg p-3 mt-4 font-bold bg-gray-800 hover:bg-slate-700 text-white transition-all active:scale-95 duration-400">
+			<button
+				disabled={!quoteResponse || !publicKey}
+				onClick={() => handleSwapTransaction(quoteResponse)}
+				className="w-full rounded-lg p-3 mt-4 font-bold bg-gray-800 hover:bg-slate-700 text-white transition-all active:scale-95 duration-400"
+			>
 				Swap
 			</button>
 
