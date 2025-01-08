@@ -1,14 +1,22 @@
 "use client";
 
 import React from "react";
-import { AdvancedRealTimeChart } from "react-ts-tradingview-widgets";
+import dynamic from "next/dynamic";
+
+const AdvancedRealTimeChart = dynamic(
+	() =>
+		import("react-ts-tradingview-widgets").then(
+			(mod) => mod.AdvancedRealTimeChart
+		),
+	{ ssr: false }
+);
 
 interface ChartWidgetProps {
 	baseCoin: string; //coin swapping from
 	quoteCoin: string; //coin swapping to
 }
 
-export default function ChartWidget({ quoteCoin }: ChartWidgetProps) {
+export default function ChartWidget({ quoteCoin, baseCoin }: ChartWidgetProps) {
 	//combine the base and quote coins to form the TradingView symbol
 	const symbol = `${quoteCoin}`;
 

@@ -81,8 +81,8 @@ export default function Home() {
 										{quoteCoin?.symbol ?? "N/A"} Price Chart
 									</h2>
 									<ChartWidget
-										baseCoin={baseCoin?.symbol ?? ""}
-										quoteCoin={quoteCoin?.symbol ?? ""}
+										baseCoin={baseCoin?.symbol ?? "SOL"}
+										quoteCoin={quoteCoin?.symbol ?? "USDT"}
 									/>
 								</div>
 								<div className="flex-1">

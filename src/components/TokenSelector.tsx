@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useMemo } from "react";
 import NoImage from "@/assets/no-image-icon-6.png";
 import { useWallet, ConnectionContext } from "@solana/wallet-adapter-react";
-import getTokenBalance, { TokenBalanceReturn } from "../hooks/GetTokenBalance";
+import getTokenBalance from "../hooks/GetTokenBalance";
+import { set } from "@project-serum/anchor/dist/cjs/utils/features";
 
 export interface Token {
 	address: string;
@@ -67,7 +68,12 @@ export default function TokenSelector({
 	// Fetch balances for baseCoin and quoteCoin
 	useEffect(() => {
 		const fetchBalances = async () => {
-			if (!publicKey || !endpoint?.connection) return;
+			console.log(publicKey);
+			if (!publicKey || !endpoint?.connection) {
+				setBaseCoinBalance("0.00");
+				setQuoteCoinBalance("0.00");
+				return;
+			}
 
 			try {
 				// Fetch baseCoin balance
@@ -106,7 +112,7 @@ export default function TokenSelector({
 		};
 
 		fetchBalances();
-	}, [publicKey, endpoint.connection, baseCoin.address, quoteCoin.address]);
+	}, [publicKey, baseCoin.address, quoteCoin.address]);
 
 	const handleTokenSelect = (token: Token) => {
 		if (isModalOpen === "selling") {
@@ -156,7 +162,7 @@ export default function TokenSelector({
 		}
 	};
 
-	useEffect(() => {
+	useMemo(() => {
 		if (baseCoin && quoteCoin && sellingAmount) {
 			handleQuoteTransaction(
 				baseCoin.address,
@@ -232,12 +238,16 @@ export default function TokenSelector({
 					<input
 						type="text"
 						placeholder="0.00"
+						disabled
 						className="w-1/3 p-3 bg-gray-800 text-white rounded-lg"
 						value={buyingAmount}
 						readOnly
 					/>
 				</div>
 			</div>
+			<button className="w-full rounded-lg p-3 mt-4 font-bold bg-gray-800 hover:bg-slate-700 text-white transition-all active:scale-95 duration-400">
+				Swap
+			</button>
 
 			{/* Modal Logic */}
 			{isModalOpen && (
