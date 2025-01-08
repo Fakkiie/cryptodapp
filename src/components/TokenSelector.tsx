@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import NoImage from "@/assets/no-image-icon-6.png";
+import { useWallet, ConnectionContext } from "@solana/wallet-adapter-react";
+import getTokenBalance, { TokenBalanceReturn } from "../hooks/GetTokenBalance";
 
 export interface Token {
 	address: string;
@@ -31,12 +33,18 @@ export default function TokenSelector({
 	setSellingAmount,
 	setBuyingAmount,
 }: TokenSelectorProps) {
+	const { publicKey } = useWallet();
+	const endpoint = useContext(ConnectionContext);
+
 	const [tokens, setTokens] = useState<Token[]>([]);
 	const [isModalOpen, setIsModalOpen] = useState<"selling" | "buying" | null>(
 		null
 	);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [baseCoinBalance, setBaseCoinBalance] = useState<string>("Loading...");
+	const [quoteCoinBalance, setQuoteCoinBalance] = useState<string>("Loading...");
 
+	// Fetch the token list
 	useEffect(() => {
 		const fetchTokens = async () => {
 			try {
@@ -57,6 +65,45 @@ export default function TokenSelector({
 		fetchTokens();
 	}, []);
 
+	// Fetch balances for baseCoin and quoteCoin
+	useEffect(() => {
+		const fetchBalances = async () => {
+			if (!publicKey || !endpoint?.connection) return;
+
+			try {
+				// Fetch baseCoin balance
+				if (baseCoin?.address) {
+					const baseBalance = await getTokenBalance({
+						publicKey,
+						tokenMintAddress: baseCoin.address,
+						connection: endpoint.connection,
+					});
+					setBaseCoinBalance(baseBalance?.balance || "0.00");
+				} else {
+					setBaseCoinBalance("0.00");
+				}
+
+				// Fetch quoteCoin balance
+				if (quoteCoin?.address) {
+					const quoteBalance = await getTokenBalance({
+						publicKey,
+						tokenMintAddress: quoteCoin.address,
+						connection: endpoint.connection,
+					});
+					setQuoteCoinBalance(quoteBalance?.balance || "0.00");
+				} else {
+					setQuoteCoinBalance("0.00");
+				}
+			} catch (error) {
+				console.error("Error fetching balances:", error);
+				setBaseCoinBalance("Error");
+				setQuoteCoinBalance("Error");
+			}
+		};
+
+		fetchBalances();
+	}, [publicKey, endpoint.connection, baseCoin.address, quoteCoin.address]);
+
 	const handleTokenSelect = (token: Token) => {
 		if (isModalOpen === "selling") {
 			onSellingTokenChange(token);
@@ -66,44 +113,29 @@ export default function TokenSelector({
 		setIsModalOpen(null);
 	};
 
-	const handleSwapTokens = () => {
-		//swap selling and buying tokens
-		const temp = baseCoin;
-		onSellingTokenChange(quoteCoin);
-		onBuyingTokenChange(temp);
-
-		//swap the selling and buying amounts
-		const tempAmount = sellingAmount;
-		setSellingAmount(buyingAmount || "");
-		setBuyingAmount(tempAmount || "");
-	};
-
 	const filteredTokens = tokens.filter((token) =>
 		token.symbol.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
 	return (
-		<div className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto bg-gray-900 p-6 rounded-lg shadow-lg">
-			{/* selling section */}
-			<div className="flex flex-col items-center w-full mb-6">
-				<h2 className="text-white text-lg font-bold mb-2">Selling</h2>
-				<div className="flex items-center gap-2 w-full">
+		<div className="flex flex-col w-full max-w-7xl mx-auto bg-gray-900 p-6 rounded-lg shadow-lg">
+			{/* Selling Section */}
+			<div className="flex flex-col w-full mb-6">
+				<h2 className="text-white text-left text-lg font-bold mb-2">Selling</h2>
+				<h5 className="text-gray-500 mb-2">
+					{baseCoin.symbol} Balance: {baseCoinBalance} 
+				</h5>
+				<div className="flex gap-2 w-full">
 					<button
 						className="flex-grow p-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all flex items-center gap-2"
 						onClick={() => setIsModalOpen("selling")}
 					>
-						{baseCoin ? (
-							<>
-								<img
-									src={baseCoin.logoURI ?? NoImage}
-									alt={baseCoin.symbol}
-									className="w-6 h-6 rounded-full"
-								/>
-								{baseCoin.symbol}
-							</>
-						) : (
-							"Select a token"
-						)}
+						<img
+							src={baseCoin.logoURI ?? NoImage}
+							alt={baseCoin.symbol}
+							className="w-6 h-6 rounded-full"
+						/>
+						{baseCoin.symbol}
 					</button>
 					<input
 						type="text"
@@ -116,35 +148,23 @@ export default function TokenSelector({
 				</div>
 			</div>
 
-			{/* swap feature */}
-			<button
-				onClick={handleSwapTokens}
-				className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white mb-6 hover:bg-blue-600 transition-all"
-				aria-label="Swap tokens"
-			>
-				⇅
-			</button>
-
-			{/* buying section */}
-			<div className="flex flex-col items-center w-full">
+			{/* Buying Section */}
+			<div className="flex flex-col w-full text-left">
 				<h2 className="text-white text-lg font-bold mb-2">Buying</h2>
-				<div className="flex items-center gap-2 w-full">
+				<h5 className="text-gray-500 mb-2">
+					{quoteCoin.symbol} Balance: {quoteCoinBalance}
+				</h5>
+				<div className="flex gap-2 w-full">
 					<button
 						className="flex-grow p-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all flex items-center gap-2"
 						onClick={() => setIsModalOpen("buying")}
 					>
-						{quoteCoin ? (
-							<>
-								<img
-									src={quoteCoin.logoURI ?? NoImage}
-									alt={quoteCoin.symbol}
-									className="w-6 h-6 rounded-full"
-								/>
-								{quoteCoin.symbol}
-							</>
-						) : (
-							"Select a token"
-						)}
+						<img
+							src={quoteCoin.logoURI ?? NoImage}
+							alt={quoteCoin.symbol}
+							className="w-6 h-6 rounded-full"
+						/>
+						{quoteCoin.symbol}
 					</button>
 					<input
 						type="text"
@@ -156,14 +176,12 @@ export default function TokenSelector({
 				</div>
 			</div>
 
-			{/* modal feature */}
+			{/* Modal Logic */}
 			{isModalOpen && (
 				<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
 					<div className="bg-gray-900 rounded-lg shadow-lg p-6 w-96">
-						<h2 className="text-white text-xl font-bold mb-4">
-							Select a Token
-						</h2>
-						{/* search bar */}
+						<h2 className="text-white text-xl font-bold mb-4">Select a Token</h2>
+						{/* Search Bar */}
 						<input
 							type="text"
 							placeholder="Search tokens..."
@@ -171,7 +189,7 @@ export default function TokenSelector({
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 						/>
-						{/* list of tokens */}
+						{/* Token List */}
 						<div className="max-h-80 overflow-y-auto">
 							{filteredTokens.map((token) => (
 								<button
@@ -184,13 +202,11 @@ export default function TokenSelector({
 										alt={token.symbol}
 										className="w-8 h-8 rounded-full"
 									/>
-									<span className="text-white">
-										{token.symbol}
-									</span>
+									<span className="text-white">{token.symbol}</span>
 								</button>
 							))}
 						</div>
-						{/* close button */}
+						{/* Close Button */}
 						<button
 							className="w-full p-3 mt-4 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-all"
 							onClick={() => setIsModalOpen(null)}
