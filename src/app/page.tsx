@@ -14,7 +14,7 @@ import {
 import Message from "@/components/Message";
 import WalletBalance from "@/components/WalletBalance";
 import ChartWidget from "@/components/ChartWidget";
-import TokenList, { TokenProps } from "@/components/TokenList";
+import TokenList, { SelectedToken } from "@/components/TokenList";
 import "@/styles/solana-ui.css";
 import { json } from "stream/consumers";
 
@@ -39,12 +39,14 @@ export default function Home() {
 		[network]
 	);
 
-	const [sellToken, setSellToken] = useState<TokenProps | null>(
-		JSON.parse(localStorage.getItem("sellToken") ?? "")
-	);
-	const [buyToken, setBuyToken] = useState<TokenProps | null>(
-		JSON.parse(localStorage.getItem("buyToken") ?? "")
-	);
+	const [sellToken, setSellToken] = useState<SelectedToken | null>(null);
+	const [buyToken, setBuyToken] = useState<SelectedToken | null>(null);
+	if (localStorage.getItem("sellToken")) {
+		setSellToken(JSON.parse(localStorage.getItem("sellToken") ?? ""));
+	}
+	if (localStorage.getItem("buyToken")) {
+		setBuyToken(JSON.parse(localStorage.getItem("buyToken") ?? ""));
+	}
 
 	return (
 		<>

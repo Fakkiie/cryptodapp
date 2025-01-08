@@ -2,7 +2,7 @@
 
 import React from "react";
 
-export interface TokenProps {
+export interface SelectedToken {
 	tokenAddress: string;
 	name: string;
 	symbol: string;
@@ -15,7 +15,7 @@ export default function TokenList({
 	symbol,
 	image,
 	handleOpenTokenModal,
-}: TokenProps) {
+}: SelectedToken) {
 	return (
 		<>
 			<button className="p-2 flex gap-5 rounded-lg bg-gray-800 border border-gray-700 text-white">
