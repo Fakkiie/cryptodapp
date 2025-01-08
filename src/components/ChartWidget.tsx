@@ -8,9 +8,9 @@ interface ChartWidgetProps {
 	quoteCoin: string; //coin swapping to
 }
 
-export default function ChartWidget({ baseCoin, quoteCoin }: ChartWidgetProps) {
+export default function ChartWidget({ quoteCoin }: ChartWidgetProps) {
 	//combine the base and quote coins to form the TradingView symbol
-	const symbol = `${baseCoin}${quoteCoin}`;
+	const symbol = `${quoteCoin}`;
 
 	return (
 		<div className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto bg-gray-900 p-6 rounded-lg shadow-lg">
