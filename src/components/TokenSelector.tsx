@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import NoImage from "@/assets/no-image-icon-6.png";
 
-interface Token {
+export interface Token {
 	address: string;
 	symbol: string;
 	logoURI: string;
@@ -12,8 +13,8 @@ interface Token {
 interface TokenSelectorProps {
 	onBuyingTokenChange: (token: Token | null) => void;
 	onSellingTokenChange: (token: Token | null) => void;
-	baseCoin: string;
-	quoteCoin: string;
+	baseCoin: Token;
+	quoteCoin: Token;
 	sellingAmount: string;
 	buyingAmount: string;
 	setSellingAmount: (amount: string) => void;
@@ -36,22 +37,6 @@ export default function TokenSelector({
 	);
 	const [searchTerm, setSearchTerm] = useState("");
 
-	//set tokens for selling and buying
-	const [sellingToken, setSellingToken] = useState<Token | null>({
-		address: "sol-address-placeholder",
-		symbol: "SOL",
-		logoURI:
-			"https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png",
-		name: "Solana",
-	});
-	const [buyingToken, setBuyingToken] = useState<Token | null>({
-		address: "usdt-address-placeholder",
-		symbol: "USDT",
-		logoURI:
-			"https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png",
-		name: "Tether",
-	});
-
 	useEffect(() => {
 		const fetchTokens = async () => {
 			try {
@@ -72,17 +57,10 @@ export default function TokenSelector({
 		fetchTokens();
 	}, []);
 
-	useEffect(() => {
-		onSellingTokenChange(sellingToken);
-		onBuyingTokenChange(buyingToken);
-	}, [sellingToken, buyingToken, onSellingTokenChange, onBuyingTokenChange]);
-
 	const handleTokenSelect = (token: Token) => {
 		if (isModalOpen === "selling") {
-			setSellingToken(token);
 			onSellingTokenChange(token);
 		} else if (isModalOpen === "buying") {
-			setBuyingToken(token);
 			onBuyingTokenChange(token);
 		}
 		setIsModalOpen(null);
@@ -90,9 +68,9 @@ export default function TokenSelector({
 
 	const handleSwapTokens = () => {
 		//swap selling and buying tokens
-		const temp = sellingToken;
-		setSellingToken(buyingToken);
-		setBuyingToken(temp);
+		const temp = baseCoin;
+		onSellingTokenChange(quoteCoin);
+		onBuyingTokenChange(temp);
 
 		//swap the selling and buying amounts
 		const tempAmount = sellingAmount;
@@ -114,14 +92,14 @@ export default function TokenSelector({
 						className="flex-grow p-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all flex items-center gap-2"
 						onClick={() => setIsModalOpen("selling")}
 					>
-						{sellingToken ? (
+						{baseCoin ? (
 							<>
 								<img
-									src={sellingToken.logoURI}
-									alt={sellingToken.symbol}
+									src={baseCoin.logoURI ?? NoImage}
+									alt={baseCoin.symbol}
 									className="w-6 h-6 rounded-full"
 								/>
-								{sellingToken.symbol}
+								{baseCoin.symbol}
 							</>
 						) : (
 							"Select a token"
@@ -155,14 +133,14 @@ export default function TokenSelector({
 						className="flex-grow p-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all flex items-center gap-2"
 						onClick={() => setIsModalOpen("buying")}
 					>
-						{buyingToken ? (
+						{quoteCoin ? (
 							<>
 								<img
-									src={buyingToken.logoURI}
-									alt={buyingToken.symbol}
+									src={quoteCoin.logoURI ?? NoImage}
+									alt={quoteCoin.symbol}
 									className="w-6 h-6 rounded-full"
 								/>
-								{buyingToken.symbol}
+								{quoteCoin.symbol}
 							</>
 						) : (
 							"Select a token"
@@ -202,7 +180,7 @@ export default function TokenSelector({
 									className="flex items-center gap-4 p-3 hover:bg-gray-800 rounded-lg w-full text-left"
 								>
 									<img
-										src={token.logoURI}
+										src={token.logoURI ?? NoImage}
 										alt={token.symbol}
 										className="w-8 h-8 rounded-full"
 									/>

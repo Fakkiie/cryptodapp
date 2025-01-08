@@ -12,7 +12,7 @@ import {
 	WalletMultiButton,
 } from "@solana/wallet-adapter-react-ui";
 import ChartWidget from "@/components/ChartWidget";
-import TokenSelector from "@/components/TokenSelector";
+import TokenSelector, { Token } from "@/components/TokenSelector";
 import "@/styles/solana-ui.css";
 
 const API_SOL_NETWORK_URL =
@@ -26,18 +26,33 @@ export default function Home() {
 
 	const wallets = useMemo(() => [], [network]);
 
-	const [baseCoin, setBaseCoin] = useState("SOL");
-	const [quoteCoin, setQuoteCoin] = useState("USDT");
+	//set tokens for selling and buying
+	const [baseCoin, setBaseCoin] = useState<Token>({
+		address: "sol-address-placeholder",
+		symbol: "SOL",
+		logoURI:
+			"https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png",
+		name: "Solana",
+	});
+	const [quoteCoin, setQuoteCoin] = useState<Token>({
+		address: "usdt-address-placeholder",
+		symbol: "USDT",
+		logoURI:
+			"https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png",
+		name: "Tether",
+	});
 
-	const handleBuyingTokenChange = (token: any) => {
+	const handleBuyingTokenChange = (token: Token | null) => {
 		if (token) {
-			setQuoteCoin(token.symbol);
+			setQuoteCoin(token);
+			localStorage.setItem("quoteCoin", token.symbol);
 		}
 	};
 
-	const handleSellingTokenChange = (token: any) => {
+	const handleSellingTokenChange = (token: Token | null) => {
 		if (token) {
-			setBaseCoin(token.symbol);
+			setBaseCoin(token);
+			localStorage.setItem("baseCoin", token.symbol);
 		}
 	};
 
@@ -60,11 +75,12 @@ export default function Home() {
 							<div className="w-full max-w-6xl flex flex-row gap-6 bg-gray-800 p-6 rounded-lg shadow-md">
 								<div className="flex-1">
 									<h2 className="text-xl font-semibold mb-4 text-center">
-										{baseCoin}/{quoteCoin} Price Chart
+										{baseCoin?.symbol ?? "N/A"}/
+										{quoteCoin?.symbol ?? "N/A"} Price Chart
 									</h2>
 									<ChartWidget
-										baseCoin={baseCoin}
-										quoteCoin={quoteCoin}
+										baseCoin={baseCoin?.symbol ?? ""}
+										quoteCoin={quoteCoin?.symbol ?? ""}
 									/>
 								</div>
 								<div className="flex-1">
@@ -75,6 +91,12 @@ export default function Home() {
 										onSellingTokenChange={
 											handleSellingTokenChange
 										}
+										baseCoin={baseCoin}
+										quoteCoin={quoteCoin}
+										sellingAmount=""
+										buyingAmount=""
+										setBuyingAmount={() => {}}
+										setSellingAmount={() => {}}
 									/>
 								</div>
 							</div>
