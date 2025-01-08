@@ -28,18 +28,20 @@ export default function Home() {
 
 	//set tokens for selling and buying
 	const [baseCoin, setBaseCoin] = useState<Token>({
-		address: "sol-address-placeholder",
+		address: "So11111111111111111111111111111111111111112",
 		symbol: "SOL",
 		logoURI:
 			"https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png",
 		name: "Solana",
+		decimals: 9,
 	});
 	const [quoteCoin, setQuoteCoin] = useState<Token>({
-		address: "usdt-address-placeholder",
+		address: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
 		symbol: "USDT",
 		logoURI:
 			"https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png",
 		name: "Tether",
+		decimals: 6,
 	});
 
 	const handleBuyingTokenChange = (token: Token | null) => {
@@ -93,10 +95,6 @@ export default function Home() {
 										}
 										baseCoin={baseCoin}
 										quoteCoin={quoteCoin}
-										sellingAmount=""
-										buyingAmount=""
-										setBuyingAmount={() => {}}
-										setSellingAmount={() => {}}
 									/>
 								</div>
 							</div>

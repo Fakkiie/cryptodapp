@@ -1,13 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import NoImage from "@/assets/no-image-icon-6.png";
+import { ConnectionContext, useWallet } from "@solana/wallet-adapter-react";
+import getTokenBalance, { TokenBalanceReturn } from "../hooks/GetTokenBalance";
+import { set } from "@project-serum/anchor/dist/cjs/utils/features";
 
 export interface Token {
 	address: string;
 	symbol: string;
 	logoURI: string;
 	name: string;
+	decimals: number;
 }
 
 interface TokenSelectorProps {
@@ -15,10 +19,6 @@ interface TokenSelectorProps {
 	onSellingTokenChange: (token: Token | null) => void;
 	baseCoin: Token;
 	quoteCoin: Token;
-	sellingAmount: string;
-	buyingAmount: string;
-	setSellingAmount: (amount: string) => void;
-	setBuyingAmount: (amount: string) => void;
 }
 
 export default function TokenSelector({
@@ -26,16 +26,14 @@ export default function TokenSelector({
 	onSellingTokenChange,
 	baseCoin,
 	quoteCoin,
-	sellingAmount,
-	buyingAmount,
-	setSellingAmount,
-	setBuyingAmount,
 }: TokenSelectorProps) {
 	const [tokens, setTokens] = useState<Token[]>([]);
 	const [isModalOpen, setIsModalOpen] = useState<"selling" | "buying" | null>(
 		null
 	);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [sellingAmount, setSellingAmount] = useState(0);
+	const [buyingAmount, setBuyingAmount] = useState(0);
 
 	useEffect(() => {
 		const fetchTokens = async () => {
@@ -74,13 +72,48 @@ export default function TokenSelector({
 
 		//swap the selling and buying amounts
 		const tempAmount = sellingAmount;
-		setSellingAmount(buyingAmount || "");
-		setBuyingAmount(tempAmount || "");
+		setSellingAmount(buyingAmount || 0);
+		setBuyingAmount(tempAmount);
 	};
 
 	const filteredTokens = tokens.filter((token) =>
 		token.symbol.toLowerCase().includes(searchTerm.toLowerCase())
 	);
+
+	const handleQuoteTransaction = async (
+		baseCoinAddress: string,
+		quoteCoinAddress: string,
+		sellingAmount: number
+	) => {
+		const quoteResponse = await (
+			await fetch(
+				`https://quote-api.jup.ag/v6/quote?inputMint=${baseCoinAddress}&outputMint=${quoteCoinAddress}&amount=${
+					sellingAmount * Math.pow(10, baseCoin.decimals)
+				}&slippageBps=50`
+			)
+		).json();
+
+		if (quoteResponse.error) {
+			console.error("Error getting quote:", quoteResponse.error);
+			return;
+		} else {
+			setBuyingAmount(
+				quoteResponse.outAmount / Math.pow(10, quoteCoin.decimals)
+			);
+		}
+	};
+
+	useEffect(() => {
+		if (baseCoin && quoteCoin && sellingAmount) {
+			handleQuoteTransaction(
+				baseCoin.address,
+				quoteCoin.address,
+				sellingAmount
+			);
+		} else if (baseCoin && quoteCoin) {
+			setBuyingAmount(0);
+		}
+	}, [baseCoin, quoteCoin, sellingAmount]);
 
 	return (
 		<div className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto bg-gray-900 p-6 rounded-lg shadow-lg">
@@ -106,11 +139,13 @@ export default function TokenSelector({
 						)}
 					</button>
 					<input
-						type="text"
+						type="number"
 						placeholder="0.00"
 						className="w-1/3 p-3 bg-gray-800 text-white rounded-lg"
 						value={sellingAmount}
-						onChange={(e) => setSellingAmount(e.target.value)}
+						onChange={(e) =>
+							setSellingAmount(parseFloat(e.target.value))
+						}
 						inputMode="decimal"
 					/>
 				</div>
