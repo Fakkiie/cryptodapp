@@ -21,10 +21,10 @@ export default function ChartWidget({ baseCoin, quoteCoin }: ChartWidgetProps) {
 				<AdvancedRealTimeChart
 					symbol={symbol}
 					theme="dark"
-					height={600} 
-					width="100%" 
+					height={600}
+					width="100%"
 					interval="60"
-					className="rounded-lg overflow-hidden"
+					// className="rounded-lg overflow-hidden"
 				/>
 			</div>
 		</div>
