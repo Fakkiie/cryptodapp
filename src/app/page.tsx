@@ -16,13 +16,16 @@ import WalletBalance from "@/components/WalletBalance";
 import ChartWidget from "@/components/ChartWidget";
 import "@/styles/solana-ui.css";
 
+const API_URL =
+	process.env.NEXT_PUBLIC_API_URL ?? "https://api.devnet.solana.com";
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+
 export default function Home() {
 	// The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
 	const network = WalletAdapterNetwork.Devnet;
 	// You can also provide a custom RPC endpoint.
 	// const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-	const endpoint =
-		"https://solana-devnet.g.alchemy.com/v2/HzuRRQGwMGrcS955Yoy0hWDtAxG9VfF7";
+	const endpoint = API_URL + API_KEY;
 
 	const wallets = useMemo(
 		() => [

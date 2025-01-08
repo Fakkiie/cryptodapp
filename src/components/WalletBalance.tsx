@@ -11,9 +11,6 @@ export default function WalletBalance() {
 	const [solBalance, setSolBalance] = useState<TokenBalanceReturn | null>(
 		null
 	);
-	// const [balanceInfo, setBalanceInfo] = useState<TokenBalanceReturn | null>(
-	// 	null
-	// );
 	const [tokenBalance, setTokenBalance] = useState<TokenBalanceReturn | null>(
 		null
 	);
