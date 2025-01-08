@@ -21,19 +21,19 @@ export default function ChartWidget({ baseCoin, quoteCoin }: ChartWidgetProps) {
 				<AdvancedRealTimeChart
 					symbol={symbol}
 					theme="dark"
-					height={400} 
+					height={400}
 					width="100%"
 					interval="60"
 					toolbar_bg="#222" //tool bar colour
-					hide_top_toolbar={true} 
-					hide_side_toolbar={true} 
-					withdateranges={true} 
+					hide_top_toolbar={true}
+					hide_side_toolbar={true}
+					withdateranges={true}
 					allow_symbol_change={false}
-					save_image={false} 
-					details={false} 
-					hotlist={false} 
-					calendar={true} 
-					className="rounded-lg overflow-hidden"
+					save_image={false}
+					details={false}
+					hotlist={false}
+					calendar={true}
+					// className="rounded-lg overflow-hidden"
 				/>
 			</div>
 		</div>

@@ -12,7 +12,6 @@ import {
 	WalletMultiButton,
 } from "@solana/wallet-adapter-react-ui";
 import ChartWidget from "@/components/ChartWidget";
-import TokenList, { SelectedToken } from "@/components/TokenList";
 import TokenSelector from "@/components/TokenSelector";
 import "@/styles/solana-ui.css";
 
@@ -27,14 +26,6 @@ export default function Home() {
 
 	const wallets = useMemo(() => [], [network]);
 
-	const [sellToken, setSellToken] = useState<SelectedToken | null>(null);
-	const [buyToken, setBuyToken] = useState<SelectedToken | null>(null);
-	if (localStorage.getItem("sellToken")) {
-		setSellToken(JSON.parse(localStorage.getItem("sellToken") ?? ""));
-	}
-	if (localStorage.getItem("buyToken")) {
-		setBuyToken(JSON.parse(localStorage.getItem("buyToken") ?? ""));
-	}
 	const [baseCoin, setBaseCoin] = useState("SOL");
 	const [quoteCoin, setQuoteCoin] = useState("USDT");
 
