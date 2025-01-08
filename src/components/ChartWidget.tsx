@@ -14,9 +14,6 @@ export default function ChartWidget({ baseCoin, quoteCoin }: ChartWidgetProps) {
 
 	return (
 		<div className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto bg-gray-900 p-6 rounded-lg shadow-lg">
-			<h2 className="text-center text-white text-2xl font-bold mb-6">
-				{baseCoin}/{quoteCoin} Price Chart
-			</h2>
 			<div className="w-full">
 				<AdvancedRealTimeChart
 					symbol={symbol}

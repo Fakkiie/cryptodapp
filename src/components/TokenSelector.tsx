@@ -1,5 +1,3 @@
-//maybe use an alternative to img, img does render but does render pretty slow? so maybe use a different method but
-//works for now
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -14,19 +12,45 @@ interface Token {
 interface TokenSelectorProps {
 	onBuyingTokenChange: (token: Token | null) => void;
 	onSellingTokenChange: (token: Token | null) => void;
+	baseCoin: string;
+	quoteCoin: string;
+	sellingAmount: string;
+	buyingAmount: string;
+	setSellingAmount: (amount: string) => void;
+	setBuyingAmount: (amount: string) => void;
 }
 
 export default function TokenSelector({
 	onBuyingTokenChange,
+	onSellingTokenChange,
+	baseCoin,
+	quoteCoin,
+	sellingAmount,
+	buyingAmount,
+	setSellingAmount,
+	setBuyingAmount,
 }: TokenSelectorProps) {
 	const [tokens, setTokens] = useState<Token[]>([]);
-	const [sellingToken, setSellingToken] = useState<Token | null>(null);
-	const [buyingToken, setBuyingToken] = useState<Token | null>(null);
 	const [isModalOpen, setIsModalOpen] = useState<"selling" | "buying" | null>(
 		null
 	);
 	const [searchTerm, setSearchTerm] = useState("");
-	const [sellingAmount, setSellingAmount] = useState("");
+
+	//set tokens for selling and buying
+	const [sellingToken, setSellingToken] = useState<Token | null>({
+		address: "sol-address-placeholder",
+		symbol: "SOL",
+		logoURI:
+			"https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png",
+		name: "Solana",
+	});
+	const [buyingToken, setBuyingToken] = useState<Token | null>({
+		address: "usdt-address-placeholder",
+		symbol: "USDT",
+		logoURI:
+			"https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png",
+		name: "Tether",
+	});
 
 	useEffect(() => {
 		const fetchTokens = async () => {
@@ -48,10 +72,15 @@ export default function TokenSelector({
 		fetchTokens();
 	}, []);
 
-	//will allow us to close the modal when the button is pressed when set to null
+	useEffect(() => {
+		onSellingTokenChange(sellingToken);
+		onBuyingTokenChange(buyingToken);
+	}, [sellingToken, buyingToken, onSellingTokenChange, onBuyingTokenChange]);
+
 	const handleTokenSelect = (token: Token) => {
 		if (isModalOpen === "selling") {
 			setSellingToken(token);
+			onSellingTokenChange(token);
 		} else if (isModalOpen === "buying") {
 			setBuyingToken(token);
 			onBuyingTokenChange(token);
@@ -59,15 +88,18 @@ export default function TokenSelector({
 		setIsModalOpen(null);
 	};
 
-	//swaps the coins
-	const handleSwap = () => {
+	const handleSwapTokens = () => {
+		//swap selling and buying tokens
 		const temp = sellingToken;
 		setSellingToken(buyingToken);
 		setBuyingToken(temp);
-		setSellingAmount("");
+
+		//swap the selling and buying amounts
+		const tempAmount = sellingAmount;
+		setSellingAmount(buyingAmount || "");
+		setBuyingAmount(tempAmount || "");
 	};
 
-	//filtering the tokens
 	const filteredTokens = tokens.filter((token) =>
 		token.symbol.toLowerCase().includes(searchTerm.toLowerCase())
 	);
@@ -95,7 +127,6 @@ export default function TokenSelector({
 							"Select a token"
 						)}
 					</button>
-					{/* selling ammount field */}
 					<input
 						type="text"
 						placeholder="0.00"
@@ -103,15 +134,15 @@ export default function TokenSelector({
 						value={sellingAmount}
 						onChange={(e) => setSellingAmount(e.target.value)}
 						inputMode="decimal"
-						pattern="[0-9]*"
 					/>
 				</div>
 			</div>
 
-			{/* swap button*/}
+			{/* swap feature */}
 			<button
-				onClick={handleSwap}
+				onClick={handleSwapTokens}
 				className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white mb-6 hover:bg-blue-600 transition-all"
+				aria-label="Swap tokens"
 			>
 				⇅
 			</button>
@@ -137,25 +168,24 @@ export default function TokenSelector({
 							"Select a token"
 						)}
 					</button>
-					{/* buying amount field */}
 					<input
 						type="text"
 						placeholder="0.00"
 						className="w-1/3 p-3 bg-gray-800 text-white rounded-lg"
-						value="" //update this value when we can auto adjust price
+						value={buyingAmount}
 						readOnly
 					/>
 				</div>
 			</div>
 
-			{/* logic for modal */}
+			{/* modal feature */}
 			{isModalOpen && (
 				<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
 					<div className="bg-gray-900 rounded-lg shadow-lg p-6 w-96">
 						<h2 className="text-white text-xl font-bold mb-4">
 							Select a Token
 						</h2>
-						{/* search bar functionality  */}
+						{/* search bar */}
 						<input
 							type="text"
 							placeholder="Search tokens..."
@@ -163,7 +193,7 @@ export default function TokenSelector({
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 						/>
-						{/* Token List */}
+						{/* list of tokens */}
 						<div className="max-h-80 overflow-y-auto">
 							{filteredTokens.map((token) => (
 								<button
