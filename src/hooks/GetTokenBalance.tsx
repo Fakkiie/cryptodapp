@@ -3,14 +3,22 @@ import { getAssociatedTokenAddress } from "@solana/spl-token";
 
 interface TokenBalanceProps {
 	publicKey: PublicKey;
-	tokenMintAddress: string | null;
+	tokenMintAddress?: string | null;
 	connection: Connection;
 }
+
+export interface TokenBalanceReturn {
+	balance?: number | null;
+	decimals?: number;
+	amount?: number;
+	token?: string;
+}
+
 export default async function getTokenBalance({
 	publicKey,
 	tokenMintAddress,
 	connection,
-}: TokenBalanceProps) {
+}: TokenBalanceProps): Promise<TokenBalanceReturn | null> {
 	try {
 		if (!publicKey) {
 			console.error("Wallet not connected");
@@ -23,7 +31,8 @@ export default async function getTokenBalance({
 			console.log(balanceInLamports);
 			return {
 				balance: balanceInLamports / 1e9, // Convert lamports to SOL
-				rawBalance: balanceInLamports, // Raw lamports value
+				decimals: balanceInLamports / 1e9, // Raw lamports value
+				amount: balanceInLamports,
 				token: "SOL", // Indicate it's SOL
 			};
 		}
@@ -40,9 +49,9 @@ export default async function getTokenBalance({
 		);
 
 		return {
-			balance: tokenAccountBalance.value.uiAmount,
+			balance: tokenAccountBalance.value.uiAmount ?? null,
 			decimals: tokenAccountBalance.value.decimals,
-			amount: tokenAccountBalance.value.amount,
+			amount: parseFloat(tokenAccountBalance.value.amount),
 			token: tokenMintAddress, // Indicate token mint address
 		};
 	} catch (error) {

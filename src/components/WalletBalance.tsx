@@ -1,24 +1,7 @@
 import { ConnectionContext, useWallet } from "@solana/wallet-adapter-react";
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import React, { useContext, useState, useEffect, useMemo } from "react";
-import getTokenBalance from "../hooks/GetTokenBalance";
-
-type TokenType =
-	| {
-			balance: number;
-			rawBalance: number;
-			token: string;
-			decimals?: undefined;
-			amount?: undefined;
-	  }
-	| {
-			balance: number | null;
-			decimals: number;
-			amount: string;
-			rawBalance?: undefined;
-			token?: undefined;
-	  }
-	| null;
+import getTokenBalance, { TokenBalanceReturn } from "../hooks/GetTokenBalance";
 
 export default function WalletBalance() {
 	const { publicKey } = useWallet();
@@ -30,8 +13,12 @@ export default function WalletBalance() {
 		amount: string;
 	} | null>();
 	const [tokenMintAddress, setTokenMintAddress] = useState(null);
-	const [solBalance, setSolBalance] = useState(null);
-	const [tokenBalance, setTokenBalance] = useState(null);
+	const [solBalance, setSolBalance] = useState<TokenBalanceReturn | null>(
+		null
+	);
+	const [tokenBalance, setTokenBalance] = useState<TokenBalanceReturn | null>(
+		null
+	);
 	const [loading, setLoading] = useState(false);
 
 	const handleGetBalances = async () => {
@@ -40,6 +27,11 @@ export default function WalletBalance() {
 			return;
 		}
 
+		console.log("Default:", publicKey);
+		const createdPK = new PublicKey(
+			"7zdGxys7uF1Pzi2RnimmdgMz8vYGDH4JgfTxesezrWm3"
+		);
+		console.log("Created: ", createdPK);
 		console.log(await endpoint.connection.getAccountInfo(publicKey));
 
 		setLoading(true);
