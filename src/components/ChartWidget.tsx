@@ -9,7 +9,7 @@ interface ChartWidgetProps {
 }
 
 export default function ChartWidget({ baseCoin, quoteCoin }: ChartWidgetProps) {
-	//coins that fill the trading view symbols
+	//combine the base and quote coins to form the TradingView symbol
 	const symbol = `${baseCoin}${quoteCoin}`;
 
 	return (
@@ -21,10 +21,19 @@ export default function ChartWidget({ baseCoin, quoteCoin }: ChartWidgetProps) {
 				<AdvancedRealTimeChart
 					symbol={symbol}
 					theme="dark"
-					height={600}
+					height={400} 
 					width="100%"
 					interval="60"
-					// className="rounded-lg overflow-hidden"
+					toolbar_bg="#222" //tool bar colour
+					hide_top_toolbar={true} 
+					hide_side_toolbar={true} 
+					withdateranges={true} 
+					allow_symbol_change={false}
+					save_image={false} 
+					details={false} 
+					hotlist={false} 
+					calendar={true} 
+					className="rounded-lg overflow-hidden"
 				/>
 			</div>
 		</div>
