@@ -40,7 +40,7 @@ export default function WalletBalance() {
 
 			// Replace this with a real token mint address
 			const exampleTokenMint =
-				"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+				"EsPKhGTMf3bGoy4Qm7pCv3UCcWqAmbC1UGHBTDxRjjD4";
 
 			const token = await getTokenBalance({
 				publicKey,

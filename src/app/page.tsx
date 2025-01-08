@@ -18,7 +18,7 @@ import "@/styles/solana-ui.css";
 
 const API_URL =
 	process.env.NEXT_PUBLIC_API_URL ?? "https://api.devnet.solana.com";
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY ?? "";
 
 export default function Home() {
 	// The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.

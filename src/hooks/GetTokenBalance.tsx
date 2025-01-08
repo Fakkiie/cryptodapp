@@ -33,16 +33,17 @@ export default async function getTokenBalance({
 				balance: balanceInLamports / 1e9, // Convert lamports to SOL
 				decimals: balanceInLamports / 1e9, // Raw lamports value
 				amount: balanceInLamports,
-				token: "SOL", // Indicate it's SOL
+				token: "SOL",
 			};
 		}
 
-		// For SPL tokens, fetch token account balance
 		const tokenMintPublicKey = new PublicKey(tokenMintAddress);
 		const associatedTokenAddress = await getAssociatedTokenAddress(
 			tokenMintPublicKey,
 			publicKey
 		);
+
+		console.log(associatedTokenAddress);
 
 		const tokenAccountBalance = await connection.getTokenAccountBalance(
 			associatedTokenAddress
