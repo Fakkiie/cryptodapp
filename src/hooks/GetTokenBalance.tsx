@@ -7,11 +7,6 @@ interface TokenBalanceProps {
 	connection: Connection;
 }
 
-interface TokenBalanceErrorRes {
-	code: number;
-	message: string;
-}
-
 export interface TokenBalanceReturn {
 	balance?: number | null;
 	decimals?: number;
