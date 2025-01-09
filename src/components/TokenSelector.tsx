@@ -29,7 +29,7 @@ export default function TokenSelector({
 	baseCoin,
 	quoteCoin,
 }: TokenSelectorProps) {
-	const { publicKey, signTransaction, wallet } = useWallet();
+	const { publicKey, signTransaction } = useWallet();
 	const endpoint = useContext(ConnectionContext);
 
 	const [tokens, setTokens] = useState<Token[]>([]);
@@ -45,7 +45,9 @@ export default function TokenSelector({
 	const [quoteCoinBalance, setQuoteCoinBalance] = useState<string | null>(
 		"Loading..."
 	);
-	const [quoteResponse, setQuoteResponse] = useState<any | null>(null);
+	const [quoteResponse, setQuoteResponse] = useState<QuoteApiResponse | null>(
+		null
+	);
 
 	// Fetch the token list
 	useEffect(() => {
@@ -166,7 +168,9 @@ export default function TokenSelector({
 		}
 	};
 
-	const handleSwapTransaction = async (quoteResponse: any) => {
+	const handleSwapTransaction = async (
+		quoteResponse: QuoteApiResponse | null
+	) => {
 		if (!publicKey || !signTransaction) {
 			console.error(
 				"Wallet not connected or does not support signing transactions"

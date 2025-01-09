@@ -6,6 +6,7 @@ import {
 } from "@solana/web3.js";
 import { retry } from "ts-retry-promise";
 import { wait } from "../utils/wait";
+import { expect } from "@jest/globals";
 
 type TransactionSenderAndConfirmationWaiterArgs = {
 	connection: Connection;
@@ -87,12 +88,14 @@ export default async function transactionSenderAndConfirmationWaiter({
 	}
 
 	// in case rpc is not synced yet, we add some retries
-	const response: any = retry(
+	const response: Promise<VersionedTransactionResponse | null> = retry(
 		async () => {
-			await connection.getTransaction(txid, {
+			const response = await connection.getTransaction(txid, {
 				commitment: "confirmed",
 				maxSupportedTransactionVersion: 0,
 			});
+			expect(response).not.toBeNull();
+			return response;
 		},
 		{
 			retries: 5,
