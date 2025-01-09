@@ -15,3 +15,4 @@ export function getSignature(
 	}
 	return bs58.encode(signature);
 }
+//
