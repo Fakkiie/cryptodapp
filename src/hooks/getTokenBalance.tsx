@@ -57,7 +57,6 @@ export default async function getTokenBalance({
 			token: tokenMintAddress, // Indicate token mint address
 		};
 	} catch (error) {
-		// @ts-expect-error - Catch error has a code property but stupid idiot TS doesn't know that and when I try to give it a type it throws an error
 		if (error?.code === -32602) console.log("Token not in wallet");
 		else console.error("Error fetching balance:", error);
 		return null;
