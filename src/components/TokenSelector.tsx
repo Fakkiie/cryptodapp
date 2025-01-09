@@ -220,6 +220,7 @@ export default function TokenSelector({
 			);
 			const blockhash = await signedTransaction.message.recentBlockhash;
 			console.log("Blockhash:", blockhash);
+			console.log("SwapObj: ", swapObj);
 
 			const transactionResponse =
 				await transactionSenderAndConfirmationWaiter({
