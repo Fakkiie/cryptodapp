@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useState, useContext, useMemo } from "react";
-import NoImage from "@/assets/no-image-icon-6.png";
 import { useWallet, ConnectionContext } from "@solana/wallet-adapter-react";
-import getTokenBalance from "@/hooks/GetTokenBalance";
+import getTokenBalance from "@/hooks/getTokenBalance";
 import { VersionedTransaction } from "@solana/web3.js";
 import transactionSenderAndConfirmationWaiter from "../hooks/transactionSender";
 import { getSignature } from "@/hooks/getSignature";
@@ -305,9 +304,15 @@ export default function TokenSelector({
 						onClick={() => setIsModalOpen("selling")}
 					>
 						<img
-							src={baseCoin.logoURI ?? NoImage}
+							src={baseCoin.logoURI}
+							loading="lazy"
 							alt={baseCoin.symbol}
 							className="w-6 h-6 rounded-full"
+							onError={(e) => {
+								e.preventDefault();
+								(e.target as HTMLImageElement).src =
+									"/no-image-icon-6.png";
+							}}
 						/>
 						{baseCoin.symbol}
 					</button>
@@ -346,9 +351,15 @@ export default function TokenSelector({
 						onClick={() => setIsModalOpen("buying")}
 					>
 						<img
-							src={quoteCoin.logoURI ?? NoImage}
+							src={quoteCoin.logoURI}
 							alt={quoteCoin.symbol}
+							loading="lazy"
 							className="w-6 h-6 rounded-full"
+							onError={(e) => {
+								e.preventDefault();
+								(e.target as HTMLImageElement).src =
+									"/no-image-icon-6.png";
+							}}
 						/>
 						{quoteCoin.symbol}
 					</button>
@@ -394,9 +405,15 @@ export default function TokenSelector({
 									className="flex items-center gap-4 p-3 hover:bg-gray-800 rounded-lg w-full text-left"
 								>
 									<img
-										src={token.logoURI ?? NoImage}
+										src={token.logoURI}
 										alt={token.symbol}
+										loading="lazy"
 										className="w-8 h-8 rounded-full"
+										onError={(e) => {
+											e.preventDefault();
+											(e.target as HTMLImageElement).src =
+												"/no-image-icon-6.png";
+										}}
 									/>
 									<span className="text-white">
 										{token.symbol}
