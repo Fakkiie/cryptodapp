@@ -186,6 +186,13 @@ export default function TokenSelector({
 					quoteResponse,
 					userPublicKey: publicKey.toBase58(),
 					wrapAndUnwrapSol: true,
+					prioritizationFeeLamports: {
+						priorityLevelWithMaxLamports: {
+							maxLamports: 4000000,
+							global: false,
+							priorityLevel: "medium",
+						},
+					},
 				}),
 			})
 		).json();
