@@ -176,7 +176,7 @@ export default function TokenSelector({
 			console.error("No quote response available");
 			return;
 		}
-		const { swapTransaction, swapObj } = await (
+		const { swapTransaction, lastValidBlockHeight } = await (
 			await fetch("https://quote-api.jup.ag/v6/swap", {
 				method: "POST",
 				headers: {
@@ -219,8 +219,6 @@ export default function TokenSelector({
 				signedTransaction.serialize()
 			);
 			const blockhash = await signedTransaction.message.recentBlockhash;
-			console.log("Blockhash:", blockhash);
-			console.log("SwapObj: ", swapObj);
 
 			const transactionResponse =
 				await transactionSenderAndConfirmationWaiter({
@@ -228,7 +226,7 @@ export default function TokenSelector({
 					serializedTransaction,
 					blockhashWithExpiryBlockHeight: {
 						blockhash,
-						lastValidBlockHeight: swapObj.lastValidBlockHeight,
+						lastValidBlockHeight: lastValidBlockHeight,
 					},
 				});
 
