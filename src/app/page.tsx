@@ -59,7 +59,7 @@ export default function Home() {
 	};
 
 	return (
-		<div className="min-h-screen bg-gray-900 text-white flex flex-col items-center overflow-hidden">
+		<div className="min-h-screen text-white flex flex-col items-center overflow-hidden">
 			<ConnectionProvider endpoint={endpoint}>
 				<WalletProvider wallets={wallets} autoConnect>
 					<WalletModalProvider>
@@ -73,9 +73,9 @@ export default function Home() {
 							</div>
 						</header>
 
-						<main className="flex flex-col items-center w-full px-6 py-12 gap-8">
-							<div className="w-full max-w-6xl flex flex-row gap-6 bg-gray-800 p-6 rounded-lg shadow-md">
-								<div className="flex-1">
+						<main className="flex flex-col items-center w-full py-12 gap-8">
+							<div className="w-full max-w-7xl flex flex-row gap-6 bg-gray-800 p-6 rounded-lg shadow-md">
+								<div className="flex flex-col w-full">
 									<h2 className="text-xl font-semibold mb-4 text-center">
 										{baseCoin?.symbol ?? "N/A"}/
 										{quoteCoin?.symbol ?? "N/A"} Price Chart
@@ -85,7 +85,7 @@ export default function Home() {
 										quoteCoin={quoteCoin?.symbol ?? "USDT"}
 									/>
 								</div>
-								<div className="flex-1">
+								<div className="flex min-w-96">
 									<TokenSelector
 										onBuyingTokenChange={
 											handleBuyingTokenChange

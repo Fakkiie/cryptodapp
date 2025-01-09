@@ -233,9 +233,9 @@ export default function TokenSelector({
 	}, [baseCoin, quoteCoin, sellingAmount]);
 
 	return (
-		<div className="flex flex-col w-full max-w-7xl mx-auto bg-gray-900 p-6 rounded-lg shadow-lg">
+		<div className="flex flex-col w-full max-w-7xl mx-auto bg-gray-900 p-6 gap-4 rounded-lg shadow-lg">
 			{/* Selling Section */}
-			<div className="flex flex-col w-full mb-6">
+			<div className="flex flex-col w-full">
 				<h2 className="text-white text-left text-lg font-bold mb-2">
 					Selling
 				</h2>
@@ -266,11 +266,11 @@ export default function TokenSelector({
 					/>
 				</div>
 			</div>
-			<div className="relative h-fit items-center justify-center flex">
-				<div className="absolute top-1/2 -translate-y-1/2 w-full bg-gray-800 h-[1px]" />
+			<div className="relative items-center justify-center flex">
+				<div className="absolute top-1/2 w-full bg-gray-800 h-[1px] z-0" />
 				<button
 					onClick={handleSwapTokens}
-					className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white mb-6 hover:bg-blue-600 transition-all"
+					className="w-8 h-8  rounded-full flex items-center justify-center z-10 text-white border-2 customShadow bg-gray-900 border-gray-800 hover:border-orange-600 transition-all"
 					aria-label="Swap tokens"
 				>
 					⇅
@@ -308,7 +308,7 @@ export default function TokenSelector({
 			<button
 				disabled={!quoteResponse || !publicKey}
 				onClick={() => handleSwapTransaction(quoteResponse)}
-				className="w-full rounded-lg p-3 mt-4 font-bold bg-gray-800 hover:bg-slate-700 text-white transition-all active:scale-95 duration-400"
+				className="w-full rounded-lg p-3 font-bold bg-gray-800 hover:bg-slate-700 text-white transition-all active:scale-95 duration-400"
 			>
 				Swap
 			</button>
