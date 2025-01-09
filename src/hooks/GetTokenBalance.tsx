@@ -7,6 +7,11 @@ interface TokenBalanceProps {
 	connection: Connection;
 }
 
+interface TokenBalanceErrorRes {
+	code: number;
+	message: string;
+}
+
 export interface TokenBalanceReturn {
 	balance?: number | null;
 	decimals?: number;
@@ -56,8 +61,7 @@ export default async function getTokenBalance({
 			amount: parseFloat(tokenAccountBalance.value.amount),
 			token: tokenMintAddress, // Indicate token mint address
 		};
-		// @ts-ignore
-	} catch (error: any) {
+	} catch (error: TokenBalanceErrorRes | any) {
 		if (error?.code === -32602) console.log("Token not in wallet");
 		else console.error("Error fetching balance:", error);
 		return null;
