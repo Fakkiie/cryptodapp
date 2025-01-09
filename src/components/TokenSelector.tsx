@@ -188,9 +188,9 @@ export default function TokenSelector({
 					wrapAndUnwrapSol: true,
 					prioritizationFeeLamports: {
 						priorityLevelWithMaxLamports: {
-							maxLamports: 2000000,
+							maxLamports: 4000000,
 							global: false,
-							priorityLevel: "medium",
+							priorityLevel: "high",
 						},
 					},
 				}),
