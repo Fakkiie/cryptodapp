@@ -65,7 +65,7 @@ export default function Home() {
 					<WalletModalProvider>
 						<header className="w-full bg-gray-800 shadow-md py-4 px-6 flex justify-between items-center">
 							<h1 className="text-2xl font-bold text-blue-400">
-								WE NEED TO NAME IT
+								SWYPER
 							</h1>
 							<div className="flex items-center gap-4">
 								<WalletMultiButton className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition" />
