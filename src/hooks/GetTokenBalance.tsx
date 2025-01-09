@@ -56,8 +56,9 @@ export default async function getTokenBalance({
 			amount: parseFloat(tokenAccountBalance.value.amount),
 			token: tokenMintAddress, // Indicate token mint address
 		};
+		// @ts-ignore
 	} catch (error: any) {
-		if (error.code === -32602) console.log("Token not in wallet");
+		if (error?.code === -32602) console.log("Token not in wallet");
 		else console.error("Error fetching balance:", error);
 		return null;
 	}
