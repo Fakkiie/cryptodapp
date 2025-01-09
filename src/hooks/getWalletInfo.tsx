@@ -1,6 +1,5 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";
-import { useContext } from "react";
 
 interface GetWalletInfoProps {
 	connection: Connection;
