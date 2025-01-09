@@ -1,4 +1,3 @@
-//
 import {
 	BlockhashWithExpiryBlockHeight,
 	Connection,
