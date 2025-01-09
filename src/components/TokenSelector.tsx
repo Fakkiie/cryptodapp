@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import { useWallet, ConnectionContext } from "@solana/wallet-adapter-react";
-import getTokenBalance from "@/hooks/getTokenBalance";
+import getTokenBalance from "@/hooks/GetTokenBalance";
 import { VersionedTransaction } from "@solana/web3.js";
-import transactionSenderAndConfirmationWaiter from "../hooks/transactionSender";
-import { getSignature } from "@/hooks/getSignature";
+import transactionSenderAndConfirmationWaiter from "../hooks/TransactionSender";
+import { getSignature } from "@/hooks/GetSignature";
 
 export interface Token {
 	address: string;
