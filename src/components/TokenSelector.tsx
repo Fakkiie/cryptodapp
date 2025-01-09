@@ -219,6 +219,7 @@ export default function TokenSelector({
 				signedTransaction.serialize()
 			);
 			const blockhash = await signedTransaction.message.recentBlockhash;
+			console.log("Blockhash:", blockhash);
 
 			const transactionResponse =
 				await transactionSenderAndConfirmationWaiter({
