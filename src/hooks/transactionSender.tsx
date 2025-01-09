@@ -6,7 +6,6 @@ import {
 } from "@solana/web3.js";
 import { retry } from "ts-retry-promise";
 import { wait } from "../utils/wait";
-import { expect } from "@jest/globals";
 
 type TransactionSenderAndConfirmationWaiterArgs = {
 	connection: Connection;
@@ -94,11 +93,12 @@ export default async function transactionSenderAndConfirmationWaiter({
 				commitment: "confirmed",
 				maxSupportedTransactionVersion: 0,
 			});
-			expect(response).not.toBeNull();
-			return response;
+			if (response) return response;
+			return null;
 		},
 		{
 			retries: 5,
+			delay: 1_000,
 		}
 	);
 
