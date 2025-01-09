@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useContext, useMemo } from "react";
-import NoImage from "@/assets/no-image-icon-6.png";
 import { useWallet, ConnectionContext } from "@solana/wallet-adapter-react";
-import getTokenBalance from "../hooks/GetTokenBalance";
+import getTokenBalance from "@/hooks/GetTokenBalance";
 import { VersionedTransaction } from "@solana/web3.js";
+import transactionSenderAndConfirmationWaiter from "../hooks/TransactionSender";
+import { getSignature } from "@/hooks/GetSignature";
 
 export interface Token {
 	address: string;
@@ -27,7 +28,7 @@ export default function TokenSelector({
 	baseCoin,
 	quoteCoin,
 }: TokenSelectorProps) {
-	const { publicKey, signTransaction, wallet } = useWallet();
+	const { publicKey, signTransaction } = useWallet();
 	const endpoint = useContext(ConnectionContext);
 
 	const [tokens, setTokens] = useState<Token[]>([]);
@@ -43,7 +44,9 @@ export default function TokenSelector({
 	const [quoteCoinBalance, setQuoteCoinBalance] = useState<string | null>(
 		"Loading..."
 	);
-	const [quoteResponse, setQuoteResponse] = useState<any | null>(null);
+	const [quoteResponse, setQuoteResponse] = useState<QuoteApiResponse | null>(
+		null
+	);
 
 	// Fetch the token list
 	useEffect(() => {
@@ -164,7 +167,9 @@ export default function TokenSelector({
 		}
 	};
 
-	const handleSwapTransaction = async (quoteResponse: any) => {
+	const handleSwapTransaction = async (
+		quoteResponse: QuoteApiResponse | null
+	) => {
 		if (!publicKey || !signTransaction) {
 			console.error(
 				"Wallet not connected or does not support signing transactions"
@@ -174,7 +179,7 @@ export default function TokenSelector({
 			console.error("No quote response available");
 			return;
 		}
-		const { swapTransaction } = await (
+		const { swapTransaction, lastValidBlockHeight } = await (
 			await fetch("https://quote-api.jup.ag/v6/swap", {
 				method: "POST",
 				headers: {
@@ -184,37 +189,88 @@ export default function TokenSelector({
 					quoteResponse,
 					userPublicKey: publicKey.toBase58(),
 					wrapAndUnwrapSol: true,
+					prioritizationFeeLamports: {
+						priorityLevelWithMaxLamports: {
+							maxLamports: 4000000,
+							global: false,
+							priorityLevel: "high",
+						},
+					},
 				}),
 			})
 		).json();
 
 		try {
+			// Serialize transaction
 			const swapTransactionBuf = Buffer.from(swapTransaction, "base64");
 			const transaction =
 				VersionedTransaction.deserialize(swapTransactionBuf);
+
+			// Sign transaction
 			const signedTransaction = await signTransaction(transaction);
+			const signature = getSignature(transaction);
 
-			const rawTransaction = signedTransaction.serialize();
-			const txid = await endpoint.connection.sendRawTransaction(
-				rawTransaction,
-				{
-					skipPreflight: true,
-					maxRetries: 2,
-				}
+			// Simulate to see if the transaction will be succesful
+			const { value: simulatedTransactionResponse } =
+				await endpoint.connection.simulateTransaction(transaction, {
+					replaceRecentBlockhash: true,
+					commitment: "processed",
+				});
+			const { err, logs } = simulatedTransactionResponse;
+
+			if (err) {
+				// Simulation error, we can check the logs for more details
+				console.error("Simulation Error:");
+				console.error({ err, logs });
+				return;
+			}
+
+			const serializedTransaction = Buffer.from(
+				signedTransaction.serialize()
 			);
+			const blockhash = await signedTransaction.message.recentBlockhash;
 
-			const latestBlockHash =
-				await endpoint.connection.getLatestBlockhash();
-			await endpoint.connection.confirmTransaction(
-				{
-					blockhash: latestBlockHash.blockhash,
-					lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-					signature: txid,
-				},
-				"confirmed"
-			);
+			const transactionResponse =
+				await transactionSenderAndConfirmationWaiter({
+					connection: endpoint.connection,
+					serializedTransaction,
+					blockhashWithExpiryBlockHeight: {
+						blockhash,
+						lastValidBlockHeight: lastValidBlockHeight,
+					},
+				});
 
-			console.log(`https://solscan.io/tx/${txid}`);
+			// const rawTransaction = signedTransaction.serialize();
+			// const txid = await endpoint.connection.sendRawTransaction(
+			// 	rawTransaction,
+			// 	{
+			// 		skipPreflight: true,
+			// 		maxRetries: 2,
+			// 	}
+			// );
+
+			// const latestBlockHash =
+			// 	await endpoint.connection.getLatestBlockhash();
+			// await endpoint.connection.confirmTransaction(
+			// 	{
+			// 		blockhash: latestBlockHash.blockhash,
+			// 		lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+			// 		signature: txid,
+			// 	},
+			// 	"confirmed"
+			// );
+
+			// If we are not getting a response back, the transaction has not confirmed.
+			if (!transactionResponse) {
+				console.error("Transaction not confirmed");
+				return;
+			}
+
+			if (transactionResponse.meta?.err) {
+				console.error(transactionResponse.meta?.err);
+			}
+
+			console.log(`https://solscan.io/tx/${signature}`);
 		} catch (error) {
 			console.error("Error signing or sending the transaction:", error);
 		}
@@ -233,9 +289,9 @@ export default function TokenSelector({
 	}, [baseCoin, quoteCoin, sellingAmount]);
 
 	return (
-		<div className="flex flex-col w-full max-w-7xl mx-auto bg-gray-900 p-6 rounded-lg shadow-lg">
+		<div className="flex flex-col w-full max-w-7xl mx-auto bg-gray-900 p-6 gap-4 rounded-lg shadow-lg">
 			{/* Selling Section */}
-			<div className="flex flex-col w-full mb-6">
+			<div className="flex flex-col w-full">
 				<h2 className="text-white text-left text-lg font-bold mb-2">
 					Selling
 				</h2>
@@ -248,9 +304,15 @@ export default function TokenSelector({
 						onClick={() => setIsModalOpen("selling")}
 					>
 						<img
-							src={baseCoin.logoURI ?? NoImage}
+							src={baseCoin.logoURI}
+							loading="lazy"
 							alt={baseCoin.symbol}
 							className="w-6 h-6 rounded-full"
+							onError={(e) => {
+								e.preventDefault();
+								(e.target as HTMLImageElement).src =
+									"/no-image-icon-6.png";
+							}}
 						/>
 						{baseCoin.symbol}
 					</button>
@@ -266,11 +328,11 @@ export default function TokenSelector({
 					/>
 				</div>
 			</div>
-			<div className="relative h-fit items-center justify-center flex">
-				<div className="absolute top-1/2 -translate-y-1/2 w-full bg-gray-800 h-[1px]" />
+			<div className="relative items-center justify-center flex">
+				<div className="absolute top-1/2 w-full bg-gray-800 h-[1px] z-0" />
 				<button
 					onClick={handleSwapTokens}
-					className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white mb-6 hover:bg-blue-600 transition-all"
+					className="w-8 h-8  rounded-full flex items-center justify-center z-10 text-white border-2 customShadow bg-gray-900 border-gray-800 hover:border-orange-600 transition-all"
 					aria-label="Swap tokens"
 				>
 					⇅
@@ -289,9 +351,15 @@ export default function TokenSelector({
 						onClick={() => setIsModalOpen("buying")}
 					>
 						<img
-							src={quoteCoin.logoURI ?? NoImage}
+							src={quoteCoin.logoURI}
 							alt={quoteCoin.symbol}
+							loading="lazy"
 							className="w-6 h-6 rounded-full"
+							onError={(e) => {
+								e.preventDefault();
+								(e.target as HTMLImageElement).src =
+									"/no-image-icon-6.png";
+							}}
 						/>
 						{quoteCoin.symbol}
 					</button>
@@ -308,7 +376,7 @@ export default function TokenSelector({
 			<button
 				disabled={!quoteResponse || !publicKey}
 				onClick={() => handleSwapTransaction(quoteResponse)}
-				className="w-full rounded-lg p-3 mt-4 font-bold bg-gray-800 hover:bg-slate-700 text-white transition-all active:scale-95 duration-400"
+				className="w-full rounded-lg p-3 font-bold bg-gray-800 hover:bg-slate-700 text-white transition-all active:scale-95 duration-400"
 			>
 				Swap
 			</button>
@@ -337,9 +405,15 @@ export default function TokenSelector({
 									className="flex items-center gap-4 p-3 hover:bg-gray-800 rounded-lg w-full text-left"
 								>
 									<img
-										src={token.logoURI ?? NoImage}
+										src={token.logoURI}
 										alt={token.symbol}
+										loading="lazy"
 										className="w-8 h-8 rounded-full"
+										onError={(e) => {
+											e.preventDefault();
+											(e.target as HTMLImageElement).src =
+												"/no-image-icon-6.png";
+										}}
 									/>
 									<span className="text-white">
 										{token.symbol}

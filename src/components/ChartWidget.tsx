@@ -16,7 +16,7 @@ interface ChartWidgetProps {
 	quoteCoin: string; //coin swapping to
 }
 
-export default function ChartWidget({ quoteCoin, baseCoin }: ChartWidgetProps) {
+export default function ChartWidget({ quoteCoin }: ChartWidgetProps) {
 	//combine the base and quote coins to form the TradingView symbol
 	const symbol = `${quoteCoin}`;
 
