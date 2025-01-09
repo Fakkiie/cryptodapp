@@ -3,8 +3,10 @@
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import NoImage from "@/assets/no-image-icon-6.png";
 import { useWallet, ConnectionContext } from "@solana/wallet-adapter-react";
-import getTokenBalance from "../hooks/GetTokenBalance";
+import getTokenBalance from "@/hooks/GetTokenBalance";
 import { VersionedTransaction } from "@solana/web3.js";
+import transactionSenderAndConfirmationWaiter from "../hooks/transactionSender";
+import { getSignature } from "@/hooks/getSignature";
 
 export interface Token {
 	address: string;
@@ -174,7 +176,7 @@ export default function TokenSelector({
 			console.error("No quote response available");
 			return;
 		}
-		const { swapTransaction } = await (
+		const { swapTransaction, swapObj } = await (
 			await fetch("https://quote-api.jup.ag/v6/swap", {
 				method: "POST",
 				headers: {
@@ -189,32 +191,76 @@ export default function TokenSelector({
 		).json();
 
 		try {
+			// Serialize transaction
 			const swapTransactionBuf = Buffer.from(swapTransaction, "base64");
 			const transaction =
 				VersionedTransaction.deserialize(swapTransactionBuf);
+
+			// Sign transaction
 			const signedTransaction = await signTransaction(transaction);
+			const signature = getSignature(transaction);
 
-			const rawTransaction = signedTransaction.serialize();
-			const txid = await endpoint.connection.sendRawTransaction(
-				rawTransaction,
-				{
-					skipPreflight: true,
-					maxRetries: 2,
-				}
+			// Simulate to see if the transaction will be succesful
+			const { value: simulatedTransactionResponse } =
+				await endpoint.connection.simulateTransaction(transaction, {
+					replaceRecentBlockhash: true,
+					commitment: "processed",
+				});
+			const { err, logs } = simulatedTransactionResponse;
+
+			if (err) {
+				// Simulation error, we can check the logs for more details
+				console.error("Simulation Error:");
+				console.error({ err, logs });
+				return;
+			}
+
+			const serializedTransaction = Buffer.from(
+				signedTransaction.serialize()
 			);
+			const blockhash = await signedTransaction.message.recentBlockhash;
 
-			const latestBlockHash =
-				await endpoint.connection.getLatestBlockhash();
-			await endpoint.connection.confirmTransaction(
-				{
-					blockhash: latestBlockHash.blockhash,
-					lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-					signature: txid,
-				},
-				"confirmed"
-			);
+			const transactionResponse =
+				await transactionSenderAndConfirmationWaiter({
+					connection: endpoint.connection,
+					serializedTransaction,
+					blockhashWithExpiryBlockHeight: {
+						blockhash,
+						lastValidBlockHeight: swapObj.lastValidBlockHeight,
+					},
+				});
 
-			console.log(`https://solscan.io/tx/${txid}`);
+			// const rawTransaction = signedTransaction.serialize();
+			// const txid = await endpoint.connection.sendRawTransaction(
+			// 	rawTransaction,
+			// 	{
+			// 		skipPreflight: true,
+			// 		maxRetries: 2,
+			// 	}
+			// );
+
+			// const latestBlockHash =
+			// 	await endpoint.connection.getLatestBlockhash();
+			// await endpoint.connection.confirmTransaction(
+			// 	{
+			// 		blockhash: latestBlockHash.blockhash,
+			// 		lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+			// 		signature: txid,
+			// 	},
+			// 	"confirmed"
+			// );
+
+			// If we are not getting a response back, the transaction has not confirmed.
+			if (!transactionResponse) {
+				console.error("Transaction not confirmed");
+				return;
+			}
+
+			if (transactionResponse.meta?.err) {
+				console.error(transactionResponse.meta?.err);
+			}
+
+			console.log(`https://solscan.io/tx/${signature}`);
 		} catch (error) {
 			console.error("Error signing or sending the transaction:", error);
 		}
