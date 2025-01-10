@@ -3,13 +3,25 @@
 @tailwind utilities;
 
 @layer base {
-   input[type="number"]::-webkit-inner-spin-button,
-   input[type="number"]::-webkit-outer-spin-button {
-     -webkit-appearance: none;
-     margin: 0;
-   }
- }
+	input[type="number"]::-webkit-inner-spin-button,
+	input[type="number"]::-webkit-outer-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+}
 
- .customShadow:hover {
-   box-shadow: 0 0 10px rgba(251, 124, 61, 0.717);
- }
+.customShadow:hover {
+	box-shadow: 0 0 10px rgba(251, 124, 61, 0.717);
+}
+
+input {
+	outline-color: rgb(255, 166, 0);
+}
+
+button {
+	outline-color: rgb(255, 166, 0);
+}
+
+a {
+	outline-color: rgb(255, 166, 0);
+}

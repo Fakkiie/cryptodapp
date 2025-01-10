@@ -289,7 +289,7 @@ export default function TokenSelector({
 	}, [baseCoin, quoteCoin, sellingAmount]);
 
 	return (
-		<div className="flex flex-col w-full max-w-7xl mx-auto bg-gray-900 p-6 gap-4 rounded-lg shadow-lg">
+		<div className="flex flex-col w-full max-w-7xl mx-auto bg-neutral-900 p-6 gap-4 rounded-lg shadow-lg">
 			{/* Selling Section */}
 			<div className="flex flex-col w-full">
 				<h2 className="text-white text-left text-lg font-bold mb-2">
@@ -300,7 +300,7 @@ export default function TokenSelector({
 				</h5>
 				<div className="flex gap-2 w-full">
 					<button
-						className="flex-grow p-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all flex items-center gap-2"
+						className="flex-grow p-3 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-all flex items-center gap-2"
 						onClick={() => setIsModalOpen("selling")}
 					>
 						<img
@@ -319,7 +319,7 @@ export default function TokenSelector({
 					<input
 						type="number"
 						placeholder="0.00"
-						className="w-1/3 p-3 bg-gray-800 text-white rounded-lg"
+						className="w-1/3 p-3 bg-neutral-800 text-white rounded-lg"
 						value={sellingAmount}
 						onChange={(e) =>
 							setSellingAmount(parseFloat(e.target.value))
@@ -329,10 +329,10 @@ export default function TokenSelector({
 				</div>
 			</div>
 			<div className="relative items-center justify-center flex">
-				<div className="absolute top-1/2 w-full bg-gray-800 h-[1px] z-0" />
+				<div className="absolute top-1/2 w-full bg-neutral-800 h-[1px] z-0" />
 				<button
 					onClick={handleSwapTokens}
-					className="w-8 h-8  rounded-full flex items-center justify-center z-10 text-white border-2 customShadow bg-gray-900 border-gray-800 hover:border-orange-600 transition-all"
+					className="w-8 h-8  rounded-full flex items-center justify-center z-10 text-white border-2 customShadow bg-neutral-900 border-gray-800 hover:border-orange-600 transition-all"
 					aria-label="Swap tokens"
 				>
 					⇅
@@ -347,7 +347,7 @@ export default function TokenSelector({
 				</h5>
 				<div className="flex gap-2 w-full">
 					<button
-						className="flex-grow p-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all flex items-center gap-2"
+						className="flex-grow p-3 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-all flex items-center gap-2"
 						onClick={() => setIsModalOpen("buying")}
 					>
 						<img
@@ -367,7 +367,7 @@ export default function TokenSelector({
 						type="text"
 						placeholder="0.00"
 						disabled
-						className="w-1/3 p-3 bg-gray-800 text-white rounded-lg"
+						className="w-1/3 p-3 bg-neutral-800 text-white rounded-lg"
 						value={buyingAmount}
 						readOnly
 					/>
@@ -376,15 +376,21 @@ export default function TokenSelector({
 			<button
 				disabled={!quoteResponse || !publicKey}
 				onClick={() => handleSwapTransaction(quoteResponse)}
-				className="w-full rounded-lg p-3 font-bold bg-gray-800 hover:bg-slate-700 text-white transition-all active:scale-95 duration-400"
+				className={`w-full rounded-lg p-3 font-bold bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 hover:bg-orange-400/30 text-white transition-all active:scale-95 duration-400 ${
+					!quoteResponse || !publicKey ? "pointer-events-none" : ""
+				}`}
 			>
-				Swap
+				{!publicKey
+					? "Connect Wallet"
+					: !quoteResponse
+					? "Enter an amount"
+					: "Swap"}
 			</button>
 
 			{/* Modal Logic */}
 			{isModalOpen && (
 				<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-					<div className="bg-gray-900 rounded-lg shadow-lg p-6 w-96">
+					<div className="bg-neutral-900 rounded-lg shadow-lg p-6 w-96">
 						<h2 className="text-white text-xl font-bold mb-4">
 							Select a Token
 						</h2>
@@ -392,7 +398,7 @@ export default function TokenSelector({
 						<input
 							type="text"
 							placeholder="Search tokens..."
-							className="w-full p-3 mb-4 bg-gray-800 text-white rounded-lg"
+							className="w-full p-3 mb-4 bg-neutral-800 text-white rounded-lg"
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 						/>
@@ -402,7 +408,7 @@ export default function TokenSelector({
 								<button
 									key={token.address}
 									onClick={() => handleTokenSelect(token)}
-									className="flex items-center gap-4 p-3 hover:bg-gray-800 rounded-lg w-full text-left"
+									className="flex items-center gap-4 p-3 hover:bg-neutral-800 rounded-lg w-full text-left"
 								>
 									<img
 										src={token.logoURI}

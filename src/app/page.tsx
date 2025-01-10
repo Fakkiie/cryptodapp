@@ -16,6 +16,7 @@ import TokenSelector, { Token } from "@/components/TokenSelector";
 import "@/styles/solana-ui.css";
 import SideWalletModal from "@/components/SideWalletModal";
 import OpenModalButton from "@/components/OpenModalButton";
+import Image from "next/image";
 
 const API_SOL_NETWORK_URL =
 	process.env.NEXT_PUBLIC_API_SOL_NETWORK_URL ??
@@ -65,7 +66,7 @@ export default function Home() {
 	}, [isSideModalOpen]);
 
 	return (
-		<div className="min-h-screen text-white flex flex-col items-center overflow-hidden bg-gray-800">
+		<div className="min-h-screen text-white flex flex-col items-center overflow-hidden bg-neutral-800">
 			<ConnectionProvider endpoint={endpoint}>
 				<WalletProvider wallets={wallets} autoConnect>
 					<WalletModalProvider>
@@ -73,13 +74,17 @@ export default function Home() {
 							isSideModalOpen={isSideModalOpen}
 							setIsSideModalOpen={setIsSideModalOpen}
 						/>
-						<header className="w-full bg-gray-900 shadow-md py-4 px-6 flex justify-between items-center">
-							<h1 className="text-2xl font-bold text-blue-400">
-								SWYPER
-							</h1>
+						<header className="w-full bg-neutral-900 shadow-md py-4 px-6 flex justify-between items-center">
+							<Image
+								className="w-12 h-fit"
+								alt="logo"
+								src="/logo.png"
+								width={48}
+								height={64}
+							/>
 							<div className="flex items-center gap-4">
-								<WalletMultiButton className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition" />
-								<WalletDisconnectButton className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded transition" />
+								{/* <WalletMultiButton className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition" /> */}
+								{/* <WalletDisconnectButton className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded transition" /> */}
 								<OpenModalButton
 									setIsSideModalOpen={setIsSideModalOpen}
 								/>
@@ -87,13 +92,13 @@ export default function Home() {
 						</header>
 
 						<main className="flex flex-col items-center w-full py-12 gap-8">
-							<div className="w-full max-w-7xl flex flex-col bg-gray-800 p-6 rounded-lg">
+							<div className="w-full max-w-7xl flex flex-col bg-neutral-800 p-6 rounded-lg">
 								<h2 className="text-xl font-semibold mb-4">
 									{baseCoin?.symbol ?? "N/A"}/
 									{quoteCoin?.symbol ?? "N/A"} Price Chart
 								</h2>
-								<div className="flex w-full gap-6">
-									<div className="flex flex-col w-full">
+								<div className="flex flex-col md:flex-row w-full gap-6">
+									<div className="hidden sm:flex flex-col w-full">
 										<ChartWidget
 											baseCoin={baseCoin?.symbol ?? "SOL"}
 											quoteCoin={
@@ -101,7 +106,7 @@ export default function Home() {
 											}
 										/>
 									</div>
-									<div className="flex min-w-96">
+									<div className="flex sm:min-w-96">
 										<TokenSelector
 											onBuyingTokenChange={
 												handleBuyingTokenChange

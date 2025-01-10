@@ -23,7 +23,7 @@ export default function OpenModalButton({
 	return publicKey ? (
 		<button
 			onClick={() => setIsSideModalOpen(true)}
-			className="border-2 flex items-center border-gray-800 text-sm customShadow bg-gray-7800 hover:border-orange-600 rounded-full px-4 py-1.5 font-bold hover:bg-orange-600/20 transition-all"
+			className="border-2 flex items-center border-gray-800 text-sm customShadow bg-neutral-7800 hover:border-orange-600 rounded-full px-4 py-1.5 font-bold hover:bg-orange-600/20 transition-all"
 		>
 			<img
 				src={wallet?.adapter?.icon}
@@ -48,7 +48,7 @@ export default function OpenModalButton({
 				e.preventDefault();
 				setModalVisible(true);
 			}}
-			className="border-2 flex items-center border-gray-800 text-sm bg-gray-800 hover:border-orange-600 rounded-full px-4 py-1.5 font-bold hover:bg-orange-600/20 transition-all"
+			className="border-2 flex items-center border-gray-800 text-sm bg-neutral-800 hover:border-orange-600 rounded-full px-4 py-1.5 font-bold hover:bg-orange-600/20 transition-all"
 		>
 			Connect Wallet
 		</button>

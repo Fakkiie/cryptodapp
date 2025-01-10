@@ -21,7 +21,7 @@ export default function ChartWidget({ quoteCoin }: ChartWidgetProps) {
 	const symbol = `${quoteCoin}`;
 
 	return (
-		<div className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto bg-gray-900 p-6 rounded-lg shadow-lg">
+		<div className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto bg-neutral-900 p-6 rounded-lg shadow-lg">
 			<div className="w-full">
 				<AdvancedRealTimeChart
 					symbol={symbol}
