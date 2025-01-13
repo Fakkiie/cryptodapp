@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import { useWallet, ConnectionContext } from "@solana/wallet-adapter-react";
-import getTokenBalance from "@/hooks/GetTokenBalance";
+import { getTokenBalance } from "@/hooks/GetTokenBalance";
 import { VersionedTransaction } from "@solana/web3.js";
 import transactionSenderAndConfirmationWaiter from "../hooks/TransactionSender";
 import { getSignature } from "@/hooks/GetSignature";
@@ -72,7 +72,6 @@ export default function TokenSelector({
 	// Fetch balances for baseCoin and quoteCoin
 	useEffect(() => {
 		const fetchBalances = async () => {
-			console.log(publicKey);
 			if (!publicKey || !endpoint?.connection) {
 				setBaseCoinBalance("0.00");
 				setQuoteCoinBalance("0.00");
@@ -116,7 +115,68 @@ export default function TokenSelector({
 		};
 
 		fetchBalances();
-	}, [publicKey, baseCoin.address, quoteCoin.address]);
+	}, [publicKey]);
+
+	useEffect(() => {
+		const fetchBaseCoinBalance = async () => {
+			if (!publicKey || !endpoint?.connection) {
+				setBaseCoinBalance("0.00");
+				return;
+			}
+
+			try {
+				// Fetch baseCoin balance
+				if (baseCoin?.address) {
+					const baseBalance = await getTokenBalance({
+						publicKey,
+						tokenMintAddress: baseCoin.address,
+						connection: endpoint.connection,
+					});
+					console.log(baseBalance?.balance);
+					setBaseCoinBalance(
+						baseBalance?.balance?.toString() || "0.00"
+					);
+				} else {
+					setBaseCoinBalance("0.00");
+				}
+			} catch (error) {
+				console.error("Error fetching base coin balance:", error);
+				setBaseCoinBalance("Error");
+			}
+		};
+
+		fetchBaseCoinBalance();
+	}, [baseCoin.address]);
+
+	useEffect(() => {
+		const fetchQuoteCoinBalance = async () => {
+			if (!publicKey || !endpoint?.connection) {
+				setQuoteCoinBalance("0.00");
+				return;
+			}
+
+			try {
+				// Fetch quoteCoin balance
+				if (quoteCoin?.address) {
+					const quoteBalance = await getTokenBalance({
+						publicKey,
+						tokenMintAddress: quoteCoin.address,
+						connection: endpoint.connection,
+					});
+					setQuoteCoinBalance(
+						quoteBalance?.balance?.toString() || "0.00"
+					);
+				} else {
+					setQuoteCoinBalance("0.00");
+				}
+			} catch (error) {
+				console.error("Error fetching balances:", error);
+				setQuoteCoinBalance("Error");
+			}
+		};
+
+		fetchQuoteCoinBalance();
+	}, [quoteCoin.address]);
 
 	const handleTokenSelect = (token: Token) => {
 		if (isModalOpen === "selling") {

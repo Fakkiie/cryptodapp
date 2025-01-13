@@ -14,7 +14,7 @@ export interface TokenBalanceReturn {
 	token?: string;
 }
 
-export default async function getTokenBalance({
+export async function getTokenBalance({
 	publicKey,
 	tokenMintAddress,
 	connection,
@@ -49,7 +49,6 @@ export default async function getTokenBalance({
 			associatedTokenAddress
 		);
 
-		console.log("Token balance: ", tokenAccountBalance);
 		return {
 			balance: tokenAccountBalance.value.uiAmount ?? null,
 			decimals: tokenAccountBalance.value.decimals,
