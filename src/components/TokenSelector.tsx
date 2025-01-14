@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import { useWallet, ConnectionContext } from "@solana/wallet-adapter-react";
-import { getTokenBalance } from "@/hooks/GetTokenBalance";
+// import { getTokenBalance } from "@/hooks/GetTokenBalance";
+import getTokenBalance from "@/api/getTokenBalance";
 import { VersionedTransaction } from "@solana/web3.js";
 import transactionSenderAndConfirmationWaiter from "../hooks/TransactionSender";
 import { getSignature } from "@/hooks/GetSignature";
@@ -80,12 +81,13 @@ export default function TokenSelector({
 
 			try {
 				// Fetch baseCoin balance
+				const accountAddress = publicKey.toBase58();
+
 				if (baseCoin?.address) {
-					const baseBalance = await getTokenBalance({
-						publicKey,
-						tokenMintAddress: baseCoin.address,
-						connection: endpoint.connection,
-					});
+					const baseBalance = await getTokenBalance(
+						accountAddress,
+						baseCoin.address
+					);
 					console.log(baseBalance?.balance);
 					setBaseCoinBalance(
 						baseBalance?.balance?.toString() || "0.00"
@@ -96,11 +98,10 @@ export default function TokenSelector({
 
 				// Fetch quoteCoin balance
 				if (quoteCoin?.address) {
-					const quoteBalance = await getTokenBalance({
-						publicKey,
-						tokenMintAddress: quoteCoin.address,
-						connection: endpoint.connection,
-					});
+					const quoteBalance = await getTokenBalance(
+						accountAddress,
+						quoteCoin.address
+					);
 					setQuoteCoinBalance(
 						quoteBalance?.balance?.toString() || "0.00"
 					);
@@ -125,13 +126,13 @@ export default function TokenSelector({
 			}
 
 			try {
+				const accountAddress = publicKey.toBase58();
 				// Fetch baseCoin balance
 				if (baseCoin?.address) {
-					const baseBalance = await getTokenBalance({
-						publicKey,
-						tokenMintAddress: baseCoin.address,
-						connection: endpoint.connection,
-					});
+					const baseBalance = await getTokenBalance(
+						accountAddress,
+						baseCoin.address
+					);
 					console.log(baseBalance?.balance);
 					setBaseCoinBalance(
 						baseBalance?.balance?.toString() || "0.00"
@@ -156,13 +157,13 @@ export default function TokenSelector({
 			}
 
 			try {
+				const accountAddress = publicKey.toBase58();
 				// Fetch quoteCoin balance
 				if (quoteCoin?.address) {
-					const quoteBalance = await getTokenBalance({
-						publicKey,
-						tokenMintAddress: quoteCoin.address,
-						connection: endpoint.connection,
-					});
+					const quoteBalance = await getTokenBalance(
+						accountAddress,
+						quoteCoin.address
+					);
 					setQuoteCoinBalance(
 						quoteBalance?.balance?.toString() || "0.00"
 					);
