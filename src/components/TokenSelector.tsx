@@ -7,6 +7,7 @@ import getTokenBalance from "@/api/getTokenBalance";
 import { VersionedTransaction } from "@solana/web3.js";
 import transactionSenderAndConfirmationWaiter from "../hooks/TransactionSender";
 import { getSignature } from "@/hooks/GetSignature";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 
 export interface Token {
 	address: string;
@@ -29,9 +30,9 @@ export default function TokenSelector({
 	baseCoin,
 	quoteCoin,
 }: TokenSelectorProps) {
-	const { publicKey, signTransaction } = useWallet();
+	const { publicKey, signTransaction, connect } = useWallet();
 	const endpoint = useContext(ConnectionContext);
-
+	const { setVisible: setModalVisible } = useWalletModal();
 	const [tokens, setTokens] = useState<Token[]>([]);
 	const [isModalOpen, setIsModalOpen] = useState<"selling" | "buying" | null>(
 		null
@@ -396,7 +397,7 @@ export default function TokenSelector({
 					className="w-8 h-8  rounded-full flex items-center justify-center z-10 text-white border-2 customShadow bg-neutral-900 border-gray-800 hover:border-orange-600 transition-all"
 					aria-label="Swap tokens"
 				>
-					⇅
+						⇅
 				</button>
 			</div>
 
@@ -435,10 +436,16 @@ export default function TokenSelector({
 				</div>
 			</div>
 			<button
-				disabled={!quoteResponse || !publicKey}
-				onClick={() => handleSwapTransaction(quoteResponse)}
+				disabled={!quoteResponse && publicKey}
+				onClick={() => {
+					if (!publicKey) {
+						setModalVisible(true);
+					} else {
+						handleSwapTransaction(quoteResponse);
+					}
+				}}
 				className={`w-full rounded-lg p-3 font-bold bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 hover:bg-orange-400/30 text-white transition-all active:scale-95 duration-400 ${
-					!quoteResponse || !publicKey ? "pointer-events-none" : ""
+					!quoteResponse && publicKey ? "pointer-events-none" : ""
 				}`}
 			>
 				{!publicKey
