@@ -11,7 +11,7 @@ export default function SideWalletModal({
 	isSideModalOpen,
 	setIsSideModalOpen,
 }: SideWalletModalProps) {
-	const { publicKey } = useWallet();
+	const { publicKey, disconnect } = useWallet();
 	const endpoint = useContext(ConnectionContext);
 	const [shownPublicKey, setShownPublicKey] = useState<string | null>(null);
 	const [publicKeyString, setPublicKeyString] = useState<string | null>(null);
@@ -118,7 +118,13 @@ export default function SideWalletModal({
 							</svg>
 						</button>
 						{/* Disconnect Button */}
-						<button className="rounded-full transition-all border border-transparent hover:border-white/20 hover:bg-white/10 p-2 active:scale-95">
+						<button
+							onClick={() => {
+								disconnect();
+								setIsSideModalOpen(false);
+							}}
+							className="rounded-full transition-all border border-transparent hover:border-white/20 hover:bg-white/10 p-2 active:scale-95"
+						>
 							<svg
 								className="w-5 h-5"
 								xmlns="http://www.w3.org/2000/svg"
