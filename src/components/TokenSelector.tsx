@@ -352,6 +352,14 @@ export default function TokenSelector({
 
 	return (
 		<div className="flex flex-col w-full max-w-7xl mx-auto bg-neutral-900 p-6 gap-4 rounded-lg shadow-lg">
+			<div className="flex justify-center w-full gap-4">
+				<div className="w-1/3 text-center rounded-2xl p-2 font-bold bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 hover:bg-orange-400/30 text-white text-sm">
+					Swap
+				</div>
+				<div className="w-1/3 text-center rounded-2xl p-2 font-bold bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 hover:bg-orange-400/30 text-white text-sm">
+					Limits
+				</div>
+			</div>
 			{/* Selling Section */}
 			<div className="flex flex-col w-full">
 				<h2 className="text-white text-left text-lg font-bold mb-2">
