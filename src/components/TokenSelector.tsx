@@ -359,7 +359,7 @@ export default function TokenSelector({
 						className={`w-1/3 text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
 							!isLimitOrder
 								? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
-								: "bg-transparent text-white"
+								: "bg-transparent text-white hover:bg-orange-400/30"
 						}`}
 						onClick={() => setIsLimitOrder(false)}
 					>
@@ -369,7 +369,7 @@ export default function TokenSelector({
 						className={`w-1/3 text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
 							isLimitOrder
 								? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
-								: "bg-transparent text-white"
+								: "bg-transparent text-white hover:bg-orange-400/30"
 						}`}
 						onClick={() => setIsLimitOrder(true)}
 					>
