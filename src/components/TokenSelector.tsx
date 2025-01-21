@@ -49,6 +49,8 @@ export default function TokenSelector({
 	const [quoteResponse, setQuoteResponse] = useState<QuoteApiResponse | null>(
 		null
 	);
+	const [isLimitOrder, setIsLimitOrder] = useState(false);
+	const [limitPrice, setLimitPrice] = useState(0);
 
 	// Fetch the token list
 	useEffect(() => {
@@ -353,13 +355,27 @@ export default function TokenSelector({
 	return (
 		<div className="flex flex-col w-full max-w-7xl mx-auto bg-neutral-900 p-6 gap-4 rounded-lg shadow-lg">
 			<div className="flex justify-center w-full gap-4">
-				<div className="w-1/3 text-center rounded-2xl p-2 font-bold bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 hover:bg-orange-400/30 text-white text-sm">
-					Swap
+					<div
+						className={`w-1/3 text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
+							!isLimitOrder
+								? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
+								: "bg-transparent text-white"
+						}`}
+						onClick={() => setIsLimitOrder(false)}
+					>
+						Swap
+					</div>
+					<div
+						className={`w-1/3 text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
+							isLimitOrder
+								? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
+								: "bg-transparent text-white"
+						}`}
+						onClick={() => setIsLimitOrder(true)}
+					>
+						Limits
+					</div>
 				</div>
-				<div className="w-1/3 text-center rounded-2xl p-2 font-bold bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 hover:bg-orange-400/30 text-white text-sm">
-					Limits
-				</div>
-			</div>
 			{/* Selling Section */}
 			<div className="flex flex-col w-full">
 				<h2 className="text-white text-left text-lg font-bold mb-2">
@@ -405,7 +421,7 @@ export default function TokenSelector({
 					className="w-8 h-8  rounded-full flex items-center justify-center z-10 text-white border-2 customShadow bg-neutral-900 border-gray-800 hover:border-orange-600 transition-all"
 					aria-label="Swap tokens"
 				>
-						⇅
+							⇅
 				</button>
 			</div>
 
@@ -443,11 +459,17 @@ export default function TokenSelector({
 					/>
 				</div>
 			</div>
+			{isLimitOrder && (
+				<div className="flex flex-col w-full text-left text-gray-500">
+						Buying {quoteCoin.symbol} at {limitPrice}
+				</div>
+			)}
 			<button
 				disabled={!quoteResponse && publicKey}
 				onClick={() => {
 					if (!publicKey) {
 						setModalVisible(true);
+					} else if (isLimitOrder) {
 					} else {
 						handleSwapTransaction(quoteResponse);
 					}
@@ -458,6 +480,8 @@ export default function TokenSelector({
 			>
 				{!publicKey
 					? "Connect Wallet"
+					: isLimitOrder
+					? "Place Limit Order"
 					: !quoteResponse
 					? "Enter an amount"
 					: "Swap"}
