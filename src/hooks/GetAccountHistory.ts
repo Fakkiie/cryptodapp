@@ -52,20 +52,20 @@ const getTransactions = async (address: string, numTx: number, startSignature?: 
 
                         const changes: { mint: string; change: number; decimals: number }[] = [];
 
-                        preTokenBalances.forEach((preBalance: TokenBalance) => {
+                        // Process only the first 2 preTokenBalances and their corresponding postTokenBalances
+                        preTokenBalances.slice(0, 2).forEach((preBalance: TokenBalance) => {
                             const postBalance: TokenBalance | undefined = postTokenBalances.find((pb: TokenBalance) => pb.mint === preBalance.mint);
 
                             if (postBalance) {
-                                // Use uiAmount directly, which is already scaled
                                 const preAmount: number = preBalance.uiTokenAmount?.uiAmount || 0;
                                 const postAmount: number = postBalance.uiTokenAmount?.uiAmount || 0;
-                                
+
                                 const tokenChange: number = postAmount - preAmount;
 
-                                const existingChange = changes.find(change => change.mint === preBalance.mint);
-                                if (existingChange) {
-                                    existingChange.change += tokenChange;
-                                } else {
+                                if (tokenChange !== 0) {
+                                    console.log(`Pre Balance for ${preBalance.mint}: ${preAmount}`);
+                                    console.log(`Post Balance for ${postBalance.mint}: ${postAmount}`);
+
                                     changes.push({
                                         mint: preBalance.mint,
                                         change: tokenChange,
@@ -74,12 +74,10 @@ const getTransactions = async (address: string, numTx: number, startSignature?: 
                                 }
                             }
                         });
-                        
-                        // Filter out tokens with zero change
-                        const filteredChanges = changes.filter(change => change.change !== 0);
 
-                        if (filteredChanges.length === 2) {
-                            const [token1, token2] = filteredChanges;
+                        // Handle token swap details for the first two balances
+                        if (changes.length === 2) {
+                            const [token1, token2] = changes;
                             console.log(`Swapped from ${token1.mint} to ${token2.mint}`);
                             console.log(`  - Amount: ${Math.abs(token1.change).toFixed(token1.decimals)} ${token1.mint}`);
                             console.log(`  - Amount: ${Math.abs(token2.change).toFixed(token2.decimals)} ${token2.mint}`);
@@ -97,14 +95,13 @@ const getTransactions = async (address: string, numTx: number, startSignature?: 
             fetchedTxCount += transactionList.length;
             before = transactionList[transactionList.length - 1].signature;
 
-            // Add a delay between requests to avoid hitting the rate limit
-            await delay(1000); // Increase the delay as needed
+            await delay(1000); // Add delay to avoid rate limits
         }
     } catch (error) {
         console.error('Error fetching transactions:', error);
     }
 };
 
-// Start fetching transactions from the 5th signature
-const startSignature = '3GZUVswukKXuqj891jpxmzB89Zvh6sE4tfHLFMfreuYMfwj4iQv3aR9Ck7wzQWAo4rH3WtaJyVqvpADDLUU8XGy4'; // Replace with the actual signature of the 5th transaction
+// Start fetching transactions
+const startSignature = '5chMCev7gURsUe2jsvg8jhingCCKLvE8g2SQNqVx9nhaxAL2XdK8kKNo2aPMwSv5qDkbV81GpwF7ESH33o8f931y'; // Replace with the actual signature of the 5th transaction
 getTransactions(searchAddress, 20, startSignature); // Adjust the number of transactions as needed
