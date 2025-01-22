@@ -18,7 +18,7 @@ interface ChartWidgetProps {
 
 export default function ChartWidget({ quoteCoin }: ChartWidgetProps) {
 	//combine the base and quote coins to form the TradingView symbol
-	const symbol = `${quoteCoin}`;
+	const symbol = `${quoteCoin}USDT`;
 
 	return (
 		<div className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto bg-neutral-900 p-6 rounded-lg shadow-lg">
@@ -29,7 +29,7 @@ export default function ChartWidget({ quoteCoin }: ChartWidgetProps) {
 					height={400}
 					width="100%"
 					interval="60"
-					toolbar_bg="#222" //tool bar colour
+					toolbar_bg="#222" 
 					hide_top_toolbar={true}
 					hide_side_toolbar={true}
 					withdateranges={true}
@@ -38,7 +38,6 @@ export default function ChartWidget({ quoteCoin }: ChartWidgetProps) {
 					details={false}
 					hotlist={false}
 					calendar={true}
-					// className="rounded-lg overflow-hidden"
 				/>
 			</div>
 		</div>

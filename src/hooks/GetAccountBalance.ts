@@ -20,7 +20,7 @@ async function getAccountBalance() {
 
     console.log(`SOL Balance: ${solBalance / LAMPORTS_PER_SOL} SOL`);
     console.log(`Total Token Balance: ${totalTokenBalance}`);
-    console.log(`Total Balance (SOL + Tokens): ${(solBalance / LAMPORTS_PER_SOL) + totalTokenBalance} SOL`);
+    console.log(`Total Balance (SOL + Tokens): ${(solBalance / LAMPORTS_PER_SOL) + totalTokenBalance}`);
 }
 
 getAccountBalance();
