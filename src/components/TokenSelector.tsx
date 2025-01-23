@@ -5,8 +5,8 @@ import { useWallet, ConnectionContext } from "@solana/wallet-adapter-react";
 // import { getTokenBalance } from "@/hooks/GetTokenBalance";
 import getTokenBalance from "@/api/getTokenBalance";
 import { VersionedTransaction } from "@solana/web3.js";
-import transactionSenderAndConfirmationWaiter from "../hooks/TransactionSender";
-import { getSignature } from "@/hooks/GetSignature";
+import transactionSenderAndConfirmationWaiter from "../utils/TransactionSender";
+import { getSignature } from "@/utils/GetSignature";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 
 export interface Token {
@@ -355,27 +355,27 @@ export default function TokenSelector({
 	return (
 		<div className="flex flex-col w-full max-w-7xl mx-auto bg-neutral-900 p-6 gap-4 rounded-lg shadow-lg">
 			<div className="flex justify-center w-full gap-4">
-					<div
-						className={`w-1/3 text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
-							!isLimitOrder
-								? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
-								: "bg-transparent text-white hover:bg-orange-400/30"
-						}`}
-						onClick={() => setIsLimitOrder(false)}
-					>
-						Swap
-					</div>
-					<div
-						className={`w-1/3 text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
-							isLimitOrder
-								? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
-								: "bg-transparent text-white hover:bg-orange-400/30"
-						}`}
-						onClick={() => setIsLimitOrder(true)}
-					>
-						Limits
-					</div>
+				<div
+					className={`w-1/3 text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
+						!isLimitOrder
+							? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
+							: "bg-transparent text-white hover:bg-orange-400/30"
+					}`}
+					onClick={() => setIsLimitOrder(false)}
+				>
+					Swap
 				</div>
+				<div
+					className={`w-1/3 text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
+						isLimitOrder
+							? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
+							: "bg-transparent text-white hover:bg-orange-400/30"
+					}`}
+					onClick={() => setIsLimitOrder(true)}
+				>
+					Limits
+				</div>
+			</div>
 			{/* Selling Section */}
 			<div className="flex flex-col w-full">
 				<h2 className="text-white text-left text-lg font-bold mb-2">
@@ -421,7 +421,7 @@ export default function TokenSelector({
 					className="w-8 h-8  rounded-full flex items-center justify-center z-10 text-white border-2 customShadow bg-neutral-900 border-gray-800 hover:border-orange-600 transition-all"
 					aria-label="Swap tokens"
 				>
-							⇅
+					⇅
 				</button>
 			</div>
 
@@ -461,11 +461,11 @@ export default function TokenSelector({
 			</div>
 			{isLimitOrder && (
 				<div className="flex flex-col w-full text-left text-gray-500">
-						Buying {quoteCoin.symbol} at {limitPrice}
+					Buying {quoteCoin.symbol} at {limitPrice}
 				</div>
 			)}
 			<button
-				disabled={!quoteResponse && publicKey}
+				disabled={!quoteResponse && publicKey !== null}
 				onClick={() => {
 					if (!publicKey) {
 						setModalVisible(true);
