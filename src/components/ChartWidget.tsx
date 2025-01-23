@@ -18,7 +18,7 @@ interface ChartWidgetProps {
 
 export default function ChartWidget({ quoteCoin }: ChartWidgetProps) {
 	//combine the base and quote coins to form the TradingView symbol
-	const symbol = `${quoteCoin}USDT`;
+	const symbol = `${quoteCoin}USD`;
 
 	return (
 		<div className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto bg-neutral-900 p-6 rounded-lg shadow-lg">
