@@ -13,6 +13,8 @@ import "@/styles/solana-ui.css";
 import SideWalletModal from "@/components/SideWalletModal";
 import OpenModalButton from "@/components/OpenModalButton";
 import Image from "next/image";
+import LimitTokenSelector from "@/components/LimitTokenSelector";
+import SwapTokenSelector from "@/components/SwapTokenSelector";
 
 const API_SOL_NETWORK_URL =
 	process.env.NEXT_PUBLIC_API_SOL_NETWORK_URL ??
@@ -23,6 +25,7 @@ export default function Home() {
 	const network = WalletAdapterNetwork.Devnet;
 	const endpoint = API_SOL_NETWORK_URL + API_SOL_NETWORK_KEY;
 	const wallets = useMemo(() => [], [network]);
+	const [isLimitOrder, setIsLimitOrder] = useState(false);
 	const [isSideModalOpen, setIsSideModalOpen] = useState(false);
 
 	//set tokens for selling and buying
@@ -103,7 +106,58 @@ export default function Home() {
 										/>
 									</div>
 									<div className="flex sm:min-w-96">
-										<TokenSelector
+										<div className="flex flex-col w-full max-w-7xl mx-auto bg-neutral-900 p-6 gap-4 rounded-lg shadow-lg">
+											<div className="flex justify-center w-full gap-4">
+												<button
+													className={`w-1/3 transition-all text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
+														!isLimitOrder
+															? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
+															: "bg-transparent text-white hover:bg-orange-400/30"
+													}`}
+													onClick={() =>
+														setIsLimitOrder(false)
+													}
+												>
+													Swap
+												</button>
+												<button
+													className={`w-1/3 transition-all text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
+														isLimitOrder
+															? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
+															: "bg-transparent text-white hover:bg-orange-400/30"
+													}`}
+													onClick={() =>
+														setIsLimitOrder(true)
+													}
+												>
+													Limits
+												</button>
+											</div>
+											{isLimitOrder ? (
+												<LimitTokenSelector
+													onBuyingTokenChange={
+														handleBuyingTokenChange
+													}
+													onSellingTokenChange={
+														handleSellingTokenChange
+													}
+													baseCoin={baseCoin}
+													quoteCoin={quoteCoin}
+												/>
+											) : (
+												<SwapTokenSelector
+													onBuyingTokenChange={
+														handleBuyingTokenChange
+													}
+													onSellingTokenChange={
+														handleSellingTokenChange
+													}
+													baseCoin={baseCoin}
+													quoteCoin={quoteCoin}
+												/>
+											)}
+										</div>
+										{/* <TokenSelector
 											onBuyingTokenChange={
 												handleBuyingTokenChange
 											}
@@ -112,7 +166,7 @@ export default function Home() {
 											}
 											baseCoin={baseCoin}
 											quoteCoin={quoteCoin}
-										/>
+										/> */}
 									</div>
 								</div>
 							</div>

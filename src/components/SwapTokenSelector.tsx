@@ -40,16 +40,14 @@ export default function TokenSelector({
 	const [searchTerm, setSearchTerm] = useState("");
 	const [sellingAmount, setSellingAmount] = useState(0);
 	const [buyingAmount, setBuyingAmount] = useState(0);
-	const [baseCoinBalance, setBaseCoinBalance] = useState<string | null>(
-		"Loading..."
-	);
+	const [baseCoinBalance, setBaseCoinBalance] =
+		useState<string>("Loading...");
 	const [quoteCoinBalance, setQuoteCoinBalance] = useState<string | null>(
 		"Loading..."
 	);
 	const [quoteResponse, setQuoteResponse] = useState<QuoteApiResponse | null>(
 		null
 	);
-	const [isLimitOrder, setIsLimitOrder] = useState(false);
 	const [limitPrice, setLimitPrice] = useState(0);
 
 	// Fetch the token list
@@ -352,30 +350,33 @@ export default function TokenSelector({
 		}
 	}, [baseCoin, quoteCoin, sellingAmount]);
 
+	const [disableButton, setDisableButton] = useState(true);
+
+	useEffect(() => {
+		if (!publicKey) {
+			setDisableButton(false);
+		} else if (
+			!quoteResponse ||
+			sellingAmount >
+				(baseCoinBalance !== "Loading..."
+					? parseFloat(baseCoinBalance)
+					: 0)
+		) {
+			setDisableButton(true);
+		} else {
+			setDisableButton(false);
+		}
+		console.log("disableButton", disableButton);
+	}, [quoteResponse, publicKey, baseCoinBalance, sellingAmount]);
+
+	useEffect(() => {
+		console.log(
+			baseCoinBalance !== "Loading..." ? parseFloat(baseCoinBalance) : 0
+		);
+	}, [baseCoinBalance]);
+
 	return (
-		<div className="flex flex-col w-full max-w-7xl mx-auto bg-neutral-900 p-6 gap-4 rounded-lg shadow-lg">
-			<div className="flex justify-center w-full gap-4">
-				<div
-					className={`w-1/3 text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
-						!isLimitOrder
-							? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
-							: "bg-transparent text-white hover:bg-orange-400/30"
-					}`}
-					onClick={() => setIsLimitOrder(false)}
-				>
-					Swap
-				</div>
-				<div
-					className={`w-1/3 text-center rounded-2xl p-2 font-bold text-sm cursor-pointer ${
-						isLimitOrder
-							? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
-							: "bg-transparent text-white hover:bg-orange-400/30"
-					}`}
-					onClick={() => setIsLimitOrder(true)}
-				>
-					Limits
-				</div>
-			</div>
+		<>
 			{/* Selling Section */}
 			<div className="flex flex-col w-full">
 				<h2 className="text-white text-left text-lg font-bold mb-2">
@@ -459,29 +460,25 @@ export default function TokenSelector({
 					/>
 				</div>
 			</div>
-			{isLimitOrder && (
-				<div className="flex flex-col w-full text-left text-gray-500">
-					Buying {quoteCoin.symbol} at {limitPrice}
-				</div>
-			)}
 			<button
-				disabled={!quoteResponse && publicKey !== null}
+				disabled={disableButton}
 				onClick={() => {
 					if (!publicKey) {
 						setModalVisible(true);
-					} else if (isLimitOrder) {
 					} else {
 						handleSwapTransaction(quoteResponse);
 					}
 				}}
 				className={`w-full rounded-lg p-3 font-bold bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 hover:bg-orange-400/30 text-white transition-all active:scale-95 duration-400 ${
 					!quoteResponse && publicKey ? "pointer-events-none" : ""
-				}`}
+				} disabled:from-gray-600/50 disabled:to-gray-600/20 disabled:pointer-events-none`}
 			>
 				{!publicKey
 					? "Connect Wallet"
-					: isLimitOrder
-					? "Place Limit Order"
+					: (baseCoinBalance != "Loading..."
+							? parseFloat(baseCoinBalance)
+							: 0) < sellingAmount
+					? "Insufficient Balance"
 					: !quoteResponse
 					? "Enter an amount"
 					: "Swap"}
@@ -537,6 +534,6 @@ export default function TokenSelector({
 					</div>
 				</div>
 			)}
-		</div>
+		</>
 	);
 }
