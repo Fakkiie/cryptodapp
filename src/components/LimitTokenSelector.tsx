@@ -296,13 +296,23 @@ export default function TokenSelector({
 		<>
 			<div className="flex gap-2 w-full">
 				<button
+					onClick={() => setLimitOrderType("buy")}
 					className={`border border-gray-800 rounded-full w-full p-2 font-bold customShadow transition-all hover:border-orange-600 ${
-						limitOrderType === "buy" && "bg-orange-600/50"
+						limitOrderType === "buy"
+							? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
+							: "bg-transparent"
 					}`}
 				>
 					Buy
 				</button>
-				<button className="border border-gray-800 rounded-full w-full p-2 font-bold customShadow transition-all hover:border-orange-600">
+				<button
+					onClick={() => setLimitOrderType("sell")}
+					className={`border border-gray-800 rounded-full w-full p-2 font-bold customShadow transition-all hover:border-orange-600 ${
+						limitOrderType === "sell"
+							? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
+							: "bg-transparent"
+					}`}
+				>
 					Sell
 				</button>
 			</div>
@@ -392,7 +402,7 @@ export default function TokenSelector({
 
 			<div className="flex w-full text-gray-500 gap-2">
 				{limitOrderType === "buy" ? (
-					<div className="flex flex-col w-full p-2 gap-2 border border-gray-800 rounded-lg">
+					<div className="flex flex-col w-2/3 p-2 gap-2 border border-gray-800 rounded-lg">
 						<h1 className="text-sm">
 							Buying {quoteCoin.symbol} at rate
 						</h1>
@@ -400,14 +410,14 @@ export default function TokenSelector({
 							<input
 								type="number"
 								placeholder="0.00"
-								className="bg-transparent border-none outline-none text-white"
+								className="bg-transparent border-none w-2/3 outline-none text-white"
 								value={limitBuyingPrice}
 							/>
 							<p className="font-semibold">{quoteCoin.symbol}</p>
 						</div>
 					</div>
 				) : (
-					<div className="flex flex-col w-full p-2 gap-2 border border-gray-800 rounded-lg">
+					<div className="flex flex-col w-2/3 p-2 gap-2 border border-gray-800 rounded-lg">
 						<h1 className="text-sm">
 							Selling {baseCoin.symbol} at rate
 						</h1>
@@ -415,7 +425,7 @@ export default function TokenSelector({
 							<input
 								type="number"
 								placeholder="0.00"
-								className="bg-transparent border-none outline-none text-white"
+								className="bg-transparent border-none w-2/3 outline-none text-white"
 								value={limitSellingPrice}
 							/>
 							<p className="font-semibold">{baseCoin.symbol}</p>
@@ -425,8 +435,13 @@ export default function TokenSelector({
 				<div className="flex flex-col w-1/3 p-2 gap-2 border border-gray-800 rounded-lg">
 					<h1 className="text-sm">Expiry</h1>
 					<select className="bg-transparent border-none outline-none text-white">
+						<option>Never</option>
+						<option>10 minutes</option>
 						<option>1 hour</option>
-						<option>2 hours</option>
+						<option>1 day</option>
+						<option>3 days</option>
+						<option>7 days</option>
+						<option>30 days</option>
 					</select>
 				</div>
 			</div>
@@ -449,7 +464,7 @@ export default function TokenSelector({
 					: (baseCoinBalance != "Loading..."
 							? parseFloat(baseCoinBalance)
 							: 0) < sellingAmount
-					? "Insufficient Balance"
+					? "Insufficient Funds"
 					: !quoteResponse
 					? "Enter an amount"
 					: "Place Limit Order"}
