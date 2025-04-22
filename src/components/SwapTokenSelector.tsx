@@ -7,11 +7,11 @@ import getTokenBalance from '@/api/getTokenBalance';
 import { Transaction, VersionedTransaction } from '@solana/web3.js';
 import transactionSenderAndConfirmationWaiter from '../utils/TransactionSender';
 import { getSignature } from '@/utils/GetSignature';
-import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+// import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 
 import { useTurnkey } from '@turnkey/sdk-react';
 import { User } from '@turnkey/sdk-browser';
-import { PublicKey } from '@solana/web3.js';
+// import { PublicKey } from '@solana/web3.js';
 
 export interface Token {
 	address: string;
@@ -24,21 +24,28 @@ export interface Token {
 interface TokenSelectorProps {
 	onBuyingTokenChange: (token: Token | null) => void;
 	onSellingTokenChange: (token: Token | null) => void;
+	setSignInModalOpen: (isOpen: boolean) => void;
 	baseCoin: Token;
 	quoteCoin: Token;
+	publicKey: string | null;
+	notifySuccess: (message: string) => void;
+	notifyError: (message: string) => void;
 }
 
 export default function TokenSelector({
 	onBuyingTokenChange,
 	onSellingTokenChange,
+	setSignInModalOpen,
 	baseCoin,
 	quoteCoin,
+	publicKey,
+	notifyError,
+	notifySuccess,
 }: TokenSelectorProps) {
 	// const { publicKey, signTransaction, connect } = useWallet();
 
 	const { turnkey, authIframeClient } = useTurnkey();
 	const endpoint = useContext(ConnectionContext);
-	const { setVisible: setModalVisible } = useWalletModal();
 	const [tokens, setTokens] = useState<Token[]>([]);
 	const [isModalOpen, setIsModalOpen] = useState<'selling' | 'buying' | null>(
 		null
@@ -56,48 +63,6 @@ export default function TokenSelector({
 	);
 	const [limitPrice, setLimitPrice] = useState(0);
 	const [currUser, setCurrUser] = useState<User | undefined>();
-
-	const [publicKey, setPublicKey] = useState<string | null>(null);
-
-	const getPublicKey = async () => {
-		const client = authIframeClient;
-		const session = await turnkey?.getSession();
-
-		if (!session) {
-			turnkey?.logout();
-			return;
-		}
-
-		console.log(await authIframeClient?.getEmbeddedPublicKey());
-		authIframeClient?.injectCredentialBundle(session.token);
-
-		const wallets = await client?.getWallets({
-			organizationId: session.organizationId,
-		});
-		const walletId = wallets?.wallets[0].walletId ?? '';
-
-		const accounts = await client?.getWalletAccounts({
-			organizationId: session.organizationId,
-			walletId,
-		});
-		const publicKey =
-			accounts?.accounts.find(
-				(account) => account.addressFormat === 'ADDRESS_FORMAT_SOLANA'
-			)?.address ?? null;
-
-		if (!publicKey) {
-			console.error('No public key found');
-			return;
-		}
-
-		setPublicKey(publicKey);
-	};
-
-	useEffect(() => {
-		if (turnkey && authIframeClient) {
-			getPublicKey();
-		}
-	}, [turnkey, authIframeClient]);
 
 	// Fetch the token list
 	useEffect(() => {
@@ -259,22 +224,28 @@ export default function TokenSelector({
 		quoteCoinAddress: string,
 		sellingAmount: number
 	) => {
-		const quoteResponse = await (
-			await fetch(
-				`https://quote-api.jup.ag/v6/quote?inputMint=${baseCoinAddress}&outputMint=${quoteCoinAddress}&amount=${
-					sellingAmount * Math.pow(10, baseCoin.decimals)
-				}&slippageBps=50`
-			)
-		).json();
+		try {
+			const quoteResponse = await (
+				await fetch(
+					`https://quote-api.jup.ag/v6/quote?inputMint=${baseCoinAddress}&outputMint=${quoteCoinAddress}&amount=${
+						sellingAmount * Math.pow(10, baseCoin.decimals)
+					}&slippageBps=50`
+				)
+			).json();
 
-		if (quoteResponse.error) {
-			console.error('Error getting quote:', quoteResponse.error);
-			return;
-		} else {
-			setBuyingAmount(
-				quoteResponse.outAmount / Math.pow(10, quoteCoin.decimals)
-			);
-			setQuoteResponse(quoteResponse);
+			if (quoteResponse.error) {
+				console.error('Error getting quote:', quoteResponse.error);
+				return;
+			} else {
+				setBuyingAmount(
+					quoteResponse.outAmount / Math.pow(10, quoteCoin.decimals)
+				);
+				setQuoteResponse(quoteResponse);
+			}
+		} catch (error) {
+			console.error('Error fetching quote:', error);
+			// @ts-ignore
+			notifyError('Error fetching quote: ' + error.message);
 		}
 	};
 
@@ -344,23 +315,27 @@ export default function TokenSelector({
 
 			const signature = getSignature(recoveredTransaction);
 
-			// // Simulate to see if the transaction will be succesful
-			// const { value: simulatedTransactionResponse } =
-			// 	await endpoint.connection.simulateTransaction(recoveredTransaction, {
-			// 		replaceRecentBlockhash: true,
-			// 		commitment: 'processed',
-			// 	});
-			// const { err, logs } = simulatedTransactionResponse;
+			// Simulate to see if the transaction will be succesful
+			const { value: simulatedTransactionResponse } =
+				await endpoint.connection.simulateTransaction(
+					// @ts-ignore
+					recoveredTransaction,
+					{
+						replaceRecentBlockhash: true,
+						commitment: 'processed',
+					}
+				);
+			const { err, logs } = simulatedTransactionResponse;
 
-			// if (err) {
-			// 	// Simulation error, we can check the logs for more details
-			// 	console.error('Simulation Error:');
-			// 	console.error({ err, logs });
-			// 	return;
-			// } else if (!signedTransaction) {
-			// 	console.error('Transaction signing failed');
-			// 	return;
-			// }
+			if (err) {
+				// Simulation error, we can check the logs for more details
+				console.error('Simulation Error:');
+				console.error({ err, logs });
+				return;
+			} else if (!signedTransaction) {
+				console.error('Transaction signing failed');
+				return;
+			}
 
 			// const serializedTransaction = Buffer.from(
 			// 	signedTransaction.signedTransaction
@@ -381,33 +356,6 @@ export default function TokenSelector({
 				});
 
 			console.log('Transaction Response:', transactionResponse);
-
-			// const transactionResponse =
-			// 	await transactionSenderAndConfirmationWaiter({
-			// 		connection: endpoint.connection,
-			// 		serializedTransaction,
-			// 		blockhashWithExpiryBlockHeight: blockhash,
-			// 	});
-
-			// const rawTransaction = signedTransaction.serialize();
-			// const txid = await endpoint.connection.sendRawTransaction(
-			// 	rawTransaction,
-			// 	{
-			// 		skipPreflight: true,
-			// 		maxRetries: 2,
-			// 	}
-			// );
-
-			// const latestBlockHash =
-			// 	await endpoint.connection.getLatestBlockhash();
-			// await endpoint.connection.confirmTransaction(
-			// 	{
-			// 		blockhash: latestBlockHash.blockhash,
-			// 		lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-			// 		signature: txid,
-			// 	},
-			// 	"confirmed"
-			// );
 
 			// If we are not getting a response back, the transaction has not confirmed.
 			if (!transactionResponse) {
@@ -551,7 +499,7 @@ export default function TokenSelector({
 				disabled={disableButton}
 				onClick={() => {
 					if (!publicKey) {
-						setModalVisible(true);
+						setSignInModalOpen(true);
 					} else {
 						handleSwapTransaction(quoteResponse);
 					}
@@ -561,7 +509,7 @@ export default function TokenSelector({
 				} disabled:from-gray-600/50 disabled:to-gray-600/20 disabled:pointer-events-none`}
 			>
 				{!publicKey
-					? 'Connect Wallet'
+					? 'Login or Sign Up'
 					: (baseCoinBalance != 'Loading...'
 							? parseFloat(baseCoinBalance)
 							: 0) < sellingAmount
@@ -595,8 +543,13 @@ export default function TokenSelector({
 									className='flex items-center gap-4 p-3 hover:bg-neutral-800 rounded-lg w-full text-left'
 								>
 									<img
-										src={token.logoURI}
-										alt={token.symbol}
+										src={
+											token.logoURI &&
+											token.logoURI.trim() !== ''
+												? token.logoURI
+												: '/no-image-icon-6.png'
+										}
+										alt={token.symbol ?? 'unknown token'}
 										loading='lazy'
 										className='w-8 h-8 rounded-full'
 										onError={(e) => {

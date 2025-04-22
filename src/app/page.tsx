@@ -17,6 +17,7 @@ import SwapTokenSelector, { Token } from '@/components/SwapTokenSelector';
 import { Auth, useTurnkey } from '@turnkey/sdk-react';
 import { sign } from 'crypto';
 import { set } from '@project-serum/anchor/dist/cjs/utils/features';
+import { ToastContainer, toast, Slide } from 'react-toastify';
 
 const API_SOL_NETWORK_URL =
 	process.env.NEXT_PUBLIC_API_SOL_NETWORK_URL ??
@@ -31,7 +32,7 @@ export default function Home() {
 	const [isSideModalOpen, setIsSideModalOpen] = useState(false);
 	const [signInModalOpen, setSignInModalOpen] = useState(false);
 
-	const { turnkey, getActiveClient } = useTurnkey();
+	const { turnkey, authIframeClient } = useTurnkey();
 
 	const [loggedIn, setLoggedIn] = useState(false);
 
@@ -53,26 +54,75 @@ export default function Home() {
 		decimals: 6,
 	});
 
-	// const getPublicKey = async () => {
-	// 	const client = await getActiveClient();
-	// 	const organizationId = process.env.NEXT_PUBLIC_ORGANIZATION_ID;
+	const [publicKey, setPublicKey] = useState<string | null>(null);
 
-	// 	const wallets = await client?.getWallets({
-	// 		organizationId,
-	// 	});
-	// 	const walletId = wallets?.wallets[0].walletId ?? '';
+	const getPublicKey = async () => {
+		const client = authIframeClient;
+		const session = await turnkey?.getSession();
 
-	// 	const accounts = await client?.getWalletAccounts({
-	// 		organizationId,
-	// 		walletId,
-	// 	});
-	// 	console.log('accounts', accounts);
+		if (!session) {
+			turnkey?.logout();
+			setLoggedIn(false);
+			setPublicKey(null);
+			return;
+		}
+		authIframeClient?.injectCredentialBundle(session.token);
 
-	// 	const publicKey = accounts?.accounts[0].address ?? null;
-	// 	console.log('signWith', publicKey);
+		const wallets = await client?.getWallets({
+			organizationId: session.organizationId,
+		});
+		const walletId = wallets?.wallets[0].walletId ?? '';
 
-	// 	return publicKey;
-	// };
+		const accounts = await client?.getWalletAccounts({
+			organizationId: session.organizationId,
+			walletId,
+		});
+		const publicKey =
+			accounts?.accounts.find(
+				(account) => account.addressFormat === 'ADDRESS_FORMAT_SOLANA'
+			)?.address ?? null;
+
+		if (!publicKey) {
+			console.error('No public key found');
+			return;
+		}
+
+		setPublicKey(publicKey);
+	};
+
+	useEffect(() => {
+		if (turnkey && authIframeClient) {
+			getPublicKey();
+		}
+	}, [turnkey, authIframeClient]);
+
+	const notifySuccess = (msg: string) => {
+		toast.success(msg, {
+			position: 'top-center',
+			autoClose: 5000,
+			hideProgressBar: false,
+			closeOnClick: false,
+			pauseOnHover: true,
+			draggable: true,
+			progress: undefined,
+			theme: 'dark',
+			transition: Slide,
+		});
+	};
+
+	const notifyError = (msg: string) => {
+		toast.error(msg, {
+			position: 'top-center',
+			autoClose: 5000,
+			hideProgressBar: false,
+			closeOnClick: false,
+			pauseOnHover: true,
+			draggable: true,
+			progress: undefined,
+			theme: 'dark',
+			transition: Slide,
+		});
+	};
 
 	const handleBuyingTokenChange = (token: Token | null) => {
 		if (token) {
@@ -88,21 +138,11 @@ export default function Home() {
 		}
 	};
 
-	useEffect(() => {
-		console.log('modal ', isSideModalOpen);
-	}, [isSideModalOpen]);
-
-	// useEffect(() => {
-	// 	if (getPublicKey() !== null) {
-	// 		setLoggedIn(true);
-	// 	}
-	// }, []);
-
 	const handleAuthSuccess = async () => {
 		// toast success
 		console.log('Auth successful!');
-		// getPublicKey();
-		setLoggedIn(true);
+		// setLoggedIn(true);
+		getPublicKey();
 		setSignInModalOpen(false);
 	};
 
@@ -126,14 +166,34 @@ export default function Home() {
 
 	const configOrder = ['socials', 'email', 'phone', 'passkey'];
 
+	useEffect(() => {
+		console.log('loggedIn', loggedIn);
+	}, [loggedIn]);
+
 	return (
 		<div className='min-h-screen text-white flex flex-col items-center overflow-hidden bg-neutral-800'>
+			<ToastContainer
+				position='top-center'
+				autoClose={5000}
+				hideProgressBar={false}
+				newestOnTop={false}
+				closeOnClick={false}
+				rtl={false}
+				pauseOnFocusLoss
+				draggable
+				pauseOnHover
+				theme='dark'
+				transition={Slide}
+			/>
 			<ConnectionProvider endpoint={endpoint}>
 				<WalletProvider wallets={wallets} autoConnect>
 					<WalletModalProvider>
 						<SideWalletModal
 							isSideModalOpen={isSideModalOpen}
 							setIsSideModalOpen={setIsSideModalOpen}
+							publicKey={publicKey}
+							loggedIn={loggedIn}
+							setLoggedIn={setLoggedIn}
 						/>
 						<header className='w-full bg-neutral-900 shadow-md py-4 px-6 flex justify-between items-center'>
 							<Image
@@ -143,17 +203,20 @@ export default function Home() {
 								width={48}
 								height={64}
 							/>
+
 							<div className='flex items-center gap-4'>
-								{/* <WalletMultiButton className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition" /> */}
-								{/* <WalletDisconnectButton className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded transition" /> */}
-								<button
-									onClick={() => setSignInModalOpen(true)}
-									className='flex items-center text-sm bg-orange-600/20 hover:bg-orange-600/60 text-white font-semibold py-2 px-4 rounded-full transition active:scale-95 active:bg-orange-600'
-								>
-									Login
-								</button>
+								{/* {!loggedIn && (
+									<button
+										onClick={() => setSignInModalOpen(true)}
+										className='flex items-center text-sm bg-orange-600/20 hover:bg-orange-600/60 text-white font-semibold py-2 px-4 rounded-full transition active:scale-95 active:bg-orange-600'
+									>
+										Login
+									</button>
+								)} */}
 								<OpenModalButton
 									setIsSideModalOpen={setIsSideModalOpen}
+									setSignInModalOpen={setSignInModalOpen}
+									publicKey={publicKey}
 								/>
 							</div>
 						</header>
@@ -209,8 +272,16 @@ export default function Home() {
 													onSellingTokenChange={
 														handleSellingTokenChange
 													}
+													setSignInModalOpen={
+														setSignInModalOpen
+													}
 													baseCoin={baseCoin}
 													quoteCoin={quoteCoin}
+													publicKey={publicKey}
+													notifySuccess={
+														notifySuccess
+													}
+													notifyError={notifyError}
 												/>
 											) : (
 												<SwapTokenSelector
@@ -220,8 +291,16 @@ export default function Home() {
 													onSellingTokenChange={
 														handleSellingTokenChange
 													}
+													setSignInModalOpen={
+														setSignInModalOpen
+													}
 													baseCoin={baseCoin}
 													quoteCoin={quoteCoin}
+													publicKey={publicKey}
+													notifySuccess={
+														notifySuccess
+													}
+													notifyError={notifyError}
 												/>
 											)}
 										</div>

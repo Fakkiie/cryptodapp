@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState, useContext, useMemo } from "react";
-import { useWallet, ConnectionContext } from "@solana/wallet-adapter-react";
+import React, { useEffect, useState, useContext, useMemo } from 'react';
+import { ConnectionContext } from '@solana/wallet-adapter-react';
 // import { getTokenBalance } from "@/hooks/GetTokenBalance";
-import getTokenBalance from "@/api/getTokenBalance";
-import { VersionedTransaction } from "@solana/web3.js";
-import transactionSenderAndConfirmationWaiter from "../utils/TransactionSender";
-import { getSignature } from "@/utils/GetSignature";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import getTokenBalance from '@/api/getTokenBalance';
+// import { VersionedTransaction } from '@solana/web3.js';
+// import transactionSenderAndConfirmationWaiter from '../utils/TransactionSender';
+// import { getSignature } from '@/utils/GetSignature';
+import placeLimitOrder from '@/api/placeLimitOrder';
 
 export interface Token {
 	address: string;
@@ -20,8 +20,12 @@ export interface Token {
 interface TokenSelectorProps {
 	onBuyingTokenChange: (token: Token | null) => void;
 	onSellingTokenChange: (token: Token | null) => void;
+	setSignInModalOpen: (isOpen: boolean) => void;
 	baseCoin: Token;
 	quoteCoin: Token;
+	publicKey: string | null;
+	notifySuccess: (message: string) => void;
+	notifyError: (message: string) => void;
 }
 
 export default function TokenSelector({
@@ -29,28 +33,34 @@ export default function TokenSelector({
 	onSellingTokenChange,
 	baseCoin,
 	quoteCoin,
+	publicKey,
+	setSignInModalOpen,
+	notifyError,
+	notifySuccess,
 }: TokenSelectorProps) {
-	const { publicKey, signTransaction, connect } = useWallet();
 	const endpoint = useContext(ConnectionContext);
-	const { setVisible: setModalVisible } = useWalletModal();
 	const [tokens, setTokens] = useState<Token[]>([]);
-	const [isModalOpen, setIsModalOpen] = useState<"selling" | "buying" | null>(
+	const [isModalOpen, setIsModalOpen] = useState<'selling' | 'buying' | null>(
 		null
 	);
-	const [searchTerm, setSearchTerm] = useState("");
+	const [searchTerm, setSearchTerm] = useState('');
 	const [sellingAmount, setSellingAmount] = useState(0);
 	const [buyingAmount, setBuyingAmount] = useState(0);
 	const [baseCoinBalance, setBaseCoinBalance] =
-		useState<string>("Loading...");
+		useState<string>('Loading...');
 	const [quoteCoinBalance, setQuoteCoinBalance] = useState<string | null>(
-		"Loading..."
+		'Loading...'
 	);
 	const [quoteResponse, setQuoteResponse] = useState<QuoteApiResponse | null>(
 		null
 	);
-	const [limitOrderType, setLimitOrderType] = useState("buy");
+	const [limitOrderType, setLimitOrderType] = useState<'buy' | 'sell'>('buy');
 	const [limitBuyingPrice, setLimitBuyingPrice] = useState(0);
 	const [limitSellingPrice, setLimitSellingPrice] = useState(0);
+	const [baseCoinPrice, setBaseCoinPrice] = useState(0);
+	const [quoteCoinPrice, setQuoteCoinPrice] = useState(0);
+	const [isLimitOrderConfirmModalOpen, setIsLimitOrderConfirmModalOpen] =
+		useState(false);
 
 	// fetch buying token price
 	useEffect(() => {
@@ -66,10 +76,13 @@ export default function TokenSelector({
 				).json();
 
 				if (response.error) {
-					throw new Error("Failed to fetch token price");
+					notifyError('Error fetching token price');
+					throw new Error('Failed to fetch token price');
 				} else {
 					setLimitBuyingPrice(response.data[quoteCoin.address].price);
 					setLimitSellingPrice(response.data[baseCoin.address].price);
+					setBaseCoinPrice(response.data[baseCoin.address].price);
+					setQuoteCoinPrice(response.data[quoteCoin.address].price);
 				}
 			} catch (error) {}
 		};
@@ -82,15 +95,16 @@ export default function TokenSelector({
 			try {
 				const response = await fetch(
 					process.env.NEXT_PUBLIC_API_JUP_TOKEN_LIST_URL ||
-						"https://tokens.jup.ag/tokens?tags=verified"
+						'https://tokens.jup.ag/tokens?tags=verified'
 				);
 				if (!response.ok) {
-					throw new Error("Failed to fetch tokens");
+					notifyError('Error fetching tokens');
+					throw new Error('Failed to fetch tokens');
 				}
 				const data = await response.json();
 				setTokens(data);
 			} catch (error) {
-				console.error("Error fetching tokens:", error);
+				console.error('Error fetching tokens:', error);
 			}
 		};
 
@@ -101,14 +115,14 @@ export default function TokenSelector({
 	useEffect(() => {
 		const fetchBalances = async () => {
 			if (!publicKey || !endpoint?.connection) {
-				setBaseCoinBalance("0.00");
-				setQuoteCoinBalance("0.00");
+				setBaseCoinBalance('0.00');
+				setQuoteCoinBalance('0.00');
 				return;
 			}
 
 			try {
 				// Fetch baseCoin balance
-				const accountAddress = publicKey.toBase58();
+				const accountAddress = publicKey;
 
 				if (baseCoin?.address) {
 					const baseBalance = await getTokenBalance(
@@ -117,10 +131,10 @@ export default function TokenSelector({
 					);
 					console.log(baseBalance?.balance);
 					setBaseCoinBalance(
-						baseBalance?.balance?.toString() || "0.00"
+						baseBalance?.balance?.toString() || '0.00'
 					);
 				} else {
-					setBaseCoinBalance("0.00");
+					setBaseCoinBalance('0.00');
 				}
 
 				// Fetch quoteCoin balance
@@ -130,15 +144,16 @@ export default function TokenSelector({
 						quoteCoin.address
 					);
 					setQuoteCoinBalance(
-						quoteBalance?.balance?.toString() || "0.00"
+						quoteBalance?.balance?.toString() || '0.00'
 					);
 				} else {
-					setQuoteCoinBalance("0.00");
+					setQuoteCoinBalance('0.00');
 				}
 			} catch (error) {
-				console.error("Error fetching balances:", error);
-				setBaseCoinBalance("Error");
-				setQuoteCoinBalance("Error");
+				console.error('Error fetching balances:', error);
+				notifyError('Error fetching balances');
+				setBaseCoinBalance('Error');
+				setQuoteCoinBalance('Error');
 			}
 		};
 
@@ -148,12 +163,12 @@ export default function TokenSelector({
 	useEffect(() => {
 		const fetchBaseCoinBalance = async () => {
 			if (!publicKey || !endpoint?.connection) {
-				setBaseCoinBalance("0.00");
+				setBaseCoinBalance('0.00');
 				return;
 			}
 
 			try {
-				const accountAddress = publicKey.toBase58();
+				const accountAddress = publicKey;
 				// Fetch baseCoin balance
 				if (baseCoin?.address) {
 					const baseBalance = await getTokenBalance(
@@ -162,14 +177,15 @@ export default function TokenSelector({
 					);
 					console.log(baseBalance?.balance);
 					setBaseCoinBalance(
-						baseBalance?.balance?.toString() || "0.00"
+						baseBalance?.balance?.toString() || '0.00'
 					);
 				} else {
-					setBaseCoinBalance("0.00");
+					setBaseCoinBalance('0.00');
 				}
 			} catch (error) {
-				console.error("Error fetching base coin balance:", error);
-				setBaseCoinBalance("Error");
+				console.error('Error fetching base coin balance:', error);
+				notifyError('Error fetching base coin balance');
+				setBaseCoinBalance('Error');
 			}
 		};
 
@@ -179,12 +195,12 @@ export default function TokenSelector({
 	useEffect(() => {
 		const fetchQuoteCoinBalance = async () => {
 			if (!publicKey || !endpoint?.connection) {
-				setQuoteCoinBalance("0.00");
+				setQuoteCoinBalance('0.00');
 				return;
 			}
 
 			try {
-				const accountAddress = publicKey.toBase58();
+				const accountAddress = publicKey;
 				// Fetch quoteCoin balance
 				if (quoteCoin?.address) {
 					const quoteBalance = await getTokenBalance(
@@ -192,14 +208,15 @@ export default function TokenSelector({
 						quoteCoin.address
 					);
 					setQuoteCoinBalance(
-						quoteBalance?.balance?.toString() || "0.00"
+						quoteBalance?.balance?.toString() || '0.00'
 					);
 				} else {
-					setQuoteCoinBalance("0.00");
+					setQuoteCoinBalance('0.00');
 				}
 			} catch (error) {
-				console.error("Error fetching balances:", error);
-				setQuoteCoinBalance("Error");
+				console.error('Error fetching balances:', error);
+				notifyError('Error fetching balances');
+				setQuoteCoinBalance('Error');
 			}
 		};
 
@@ -207,9 +224,9 @@ export default function TokenSelector({
 	}, [quoteCoin.address]);
 
 	const handleTokenSelect = (token: Token) => {
-		if (isModalOpen === "selling") {
+		if (isModalOpen === 'selling') {
 			onSellingTokenChange(token);
-		} else if (isModalOpen === "buying") {
+		} else if (isModalOpen === 'buying') {
 			onBuyingTokenChange(token);
 		}
 		setIsModalOpen(null);
@@ -231,27 +248,58 @@ export default function TokenSelector({
 		token.symbol.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
+	const handlePlaceLimitOrder = async () => {
+		if (!publicKey) return;
+
+		const res = await placeLimitOrder({
+			limitOrderType,
+			walletAddress: publicKey,
+			buyTokenAddress: quoteCoin.address,
+			sellTokenAddress: baseCoin.address,
+			sellTokenAmount: sellingAmount,
+			sellTokenDecimals: baseCoin.decimals,
+			tokenValue:
+				limitOrderType === 'buy' ? limitBuyingPrice : limitSellingPrice,
+			sellType: limitSellingPrice < baseCoinPrice ? 'lesser' : 'greater',
+			tokenAddressOfInterest: baseCoin.address,
+		});
+		if (res.error) {
+			notifyError(res.error.message);
+			return;
+		} else {
+			notifySuccess('Limit order placed successfully');
+			setIsLimitOrderConfirmModalOpen(false);
+		}
+	};
+
 	const handleQuoteTransaction = async (
 		baseCoinAddress: string,
 		quoteCoinAddress: string,
 		sellingAmount: number
 	) => {
-		const quoteResponse = await (
-			await fetch(
-				`https://quote-api.jup.ag/v6/quote?inputMint=${baseCoinAddress}&outputMint=${quoteCoinAddress}&amount=${
-					sellingAmount * Math.pow(10, baseCoin.decimals)
-				}&slippageBps=50`
-			)
-		).json();
+		try {
+			const quoteResponse = await (
+				await fetch(
+					`https://quote-api.jup.ag/v6/quote?inputMint=${baseCoinAddress}&outputMint=${quoteCoinAddress}&amount=${
+						sellingAmount * Math.pow(10, baseCoin.decimals)
+					}&slippageBps=50`
+				)
+			).json();
 
-		if (quoteResponse.error) {
-			console.error("Error getting quote:", quoteResponse.error);
-			return;
-		} else {
-			setBuyingAmount(
-				quoteResponse.outAmount / Math.pow(10, quoteCoin.decimals)
-			);
-			setQuoteResponse(quoteResponse);
+			if (quoteResponse.error) {
+				console.error('Error getting quote:', quoteResponse.error);
+				notifyError(`Error getting quote`);
+				return;
+			} else {
+				setBuyingAmount(
+					quoteResponse.outAmount / Math.pow(10, quoteCoin.decimals)
+				);
+				setQuoteResponse(quoteResponse);
+			}
+		} catch (error) {
+			console.error('Error fetching quote:', error);
+			// @ts-ignore
+			notifyError('Error fetching quote: ' + error.message);
 		}
 	};
 
@@ -275,7 +323,7 @@ export default function TokenSelector({
 		} else if (
 			!quoteResponse ||
 			sellingAmount >
-				(baseCoinBalance !== "Loading..."
+				(baseCoinBalance !== 'Loading...'
 					? parseFloat(baseCoinBalance)
 					: 0)
 		) {
@@ -283,158 +331,168 @@ export default function TokenSelector({
 		} else {
 			setDisableButton(false);
 		}
-		console.log("disableButton", disableButton);
+		console.log('disableButton', disableButton);
 	}, [quoteResponse, publicKey, baseCoinBalance, sellingAmount]);
 
 	useEffect(() => {
 		console.log(
-			baseCoinBalance !== "Loading..." ? parseFloat(baseCoinBalance) : 0
+			baseCoinBalance !== 'Loading...' ? parseFloat(baseCoinBalance) : 0
 		);
 	}, [baseCoinBalance]);
 
 	return (
 		<>
-			<div className="flex gap-2 w-full">
+			<div className='flex gap-2 w-full'>
 				<button
-					onClick={() => setLimitOrderType("buy")}
+					onClick={() => setLimitOrderType('buy')}
 					className={`border border-gray-800 rounded-full w-full p-2 font-bold customShadow transition-all hover:border-orange-600 ${
-						limitOrderType === "buy"
-							? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
-							: "bg-transparent"
+						limitOrderType === 'buy'
+							? 'bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white'
+							: 'bg-transparent'
 					}`}
 				>
 					Buy
 				</button>
 				<button
-					onClick={() => setLimitOrderType("sell")}
+					onClick={() => setLimitOrderType('sell')}
 					className={`border border-gray-800 rounded-full w-full p-2 font-bold customShadow transition-all hover:border-orange-600 ${
-						limitOrderType === "sell"
-							? "bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white"
-							: "bg-transparent"
+						limitOrderType === 'sell'
+							? 'bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 text-white'
+							: 'bg-transparent'
 					}`}
 				>
 					Sell
 				</button>
 			</div>
 			{/* Selling Section */}
-			<div className="flex flex-col w-full">
-				<h2 className="text-white text-left text-lg font-bold mb-2">
+			<div className='flex flex-col w-full'>
+				<h2 className='text-white text-left text-lg font-bold mb-2'>
 					Selling
 				</h2>
-				<h5 className="text-gray-500 mb-2">
+				<h5 className='text-gray-500 mb-2'>
 					{baseCoin.symbol} Balance: {baseCoinBalance}
 				</h5>
-				<div className="flex gap-2 w-full">
+				<div className='flex gap-2 w-full'>
 					<button
-						className="flex-grow p-3 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-all flex items-center gap-2"
-						onClick={() => setIsModalOpen("selling")}
+						className='flex-grow p-3 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-all flex items-center gap-2'
+						onClick={() => setIsModalOpen('selling')}
 					>
 						<img
 							src={baseCoin.logoURI}
-							loading="lazy"
+							loading='lazy'
 							alt={baseCoin.symbol}
-							className="w-6 h-6 rounded-full"
+							className='w-6 h-6 rounded-full'
 							onError={(e) => {
 								e.preventDefault();
 								(e.target as HTMLImageElement).src =
-									"/no-image-icon-6.png";
+									'/no-image-icon-6.png';
 							}}
 						/>
 						{baseCoin.symbol}
 					</button>
 					<input
-						type="number"
-						placeholder="0.00"
-						className="w-1/3 p-3 bg-neutral-800 text-white rounded-lg"
+						type='number'
+						placeholder='0.00'
+						className='w-1/3 p-3 bg-neutral-800 text-white rounded-lg'
 						value={sellingAmount}
 						onChange={(e) =>
 							setSellingAmount(parseFloat(e.target.value))
 						}
-						inputMode="decimal"
+						inputMode='decimal'
 					/>
 				</div>
 			</div>
-			<div className="relative items-center justify-center flex">
-				<div className="absolute top-1/2 w-full bg-neutral-800 h-[1px] z-0" />
+			<div className='relative items-center justify-center flex'>
+				<div className='absolute top-1/2 w-full bg-neutral-800 h-[1px] z-0' />
 				<button
 					onClick={handleSwapTokens}
-					className="w-8 h-8  rounded-full flex items-center justify-center z-10 text-white border-2 customShadow bg-neutral-900 border-gray-800 hover:border-orange-600 transition-all"
-					aria-label="Swap tokens"
+					className='w-8 h-8  rounded-full flex items-center justify-center z-10 text-white border-2 customShadow bg-neutral-900 border-gray-800 hover:border-orange-600 transition-all'
+					aria-label='Swap tokens'
 				>
 					⇅
 				</button>
 			</div>
 
 			{/* Buying Section */}
-			<div className="flex flex-col w-full text-left">
-				<h2 className="text-white text-lg font-bold mb-2">Buying</h2>
-				<h5 className="text-gray-500 mb-2">
+			<div className='flex flex-col w-full text-left'>
+				<h2 className='text-white text-lg font-bold mb-2'>Buying</h2>
+				<h5 className='text-gray-500 mb-2'>
 					{quoteCoin.symbol} Balance: {quoteCoinBalance}
 				</h5>
-				<div className="flex gap-2 w-full">
+				<div className='flex gap-2 w-full'>
 					<button
-						className="flex-grow p-3 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-all flex items-center gap-2"
-						onClick={() => setIsModalOpen("buying")}
+						className='flex-grow p-3 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-all flex items-center gap-2'
+						onClick={() => setIsModalOpen('buying')}
 					>
 						<img
 							src={quoteCoin.logoURI}
 							alt={quoteCoin.symbol}
-							loading="lazy"
-							className="w-6 h-6 rounded-full"
+							loading='lazy'
+							className='w-6 h-6 rounded-full'
 							onError={(e) => {
 								e.preventDefault();
 								(e.target as HTMLImageElement).src =
-									"/no-image-icon-6.png";
+									'/no-image-icon-6.png';
 							}}
 						/>
 						{quoteCoin.symbol}
 					</button>
 					<input
-						type="text"
-						placeholder="0.00"
+						type='text'
+						placeholder='0.00'
 						disabled
-						className="w-1/3 p-3 bg-neutral-800 text-white rounded-lg"
+						className='w-1/3 p-3 bg-neutral-800 text-white rounded-lg'
 						value={buyingAmount}
 						readOnly
 					/>
 				</div>
 			</div>
 
-			<div className="flex w-full text-gray-500 gap-2">
-				{limitOrderType === "buy" ? (
-					<div className="flex flex-col w-2/3 p-2 gap-2 border border-gray-800 rounded-lg">
-						<h1 className="text-sm">
+			<div className='flex w-full text-gray-500 gap-2'>
+				{limitOrderType === 'buy' ? (
+					<div className='flex flex-col w-2/3 p-2 gap-2 border border-gray-800 rounded-lg'>
+						<h1 className='text-sm'>
 							Buying {quoteCoin.symbol} at rate
 						</h1>
-						<div className="flex justify-between items-center">
+						<div className='flex justify-between items-center'>
 							<input
-								type="number"
-								placeholder="0.00"
-								className="bg-transparent border-none w-2/3 outline-none text-white"
+								type='number'
+								placeholder='0.00'
+								className='bg-transparent border-none w-2/3 outline-none text-white'
 								value={limitBuyingPrice}
+								onChange={(e) =>
+									setLimitBuyingPrice(
+										parseFloat(e.target.value)
+									)
+								}
 							/>
-							<p className="font-semibold">{quoteCoin.symbol}</p>
+							<p className='font-semibold'>{quoteCoin.symbol}</p>
 						</div>
 					</div>
 				) : (
-					<div className="flex flex-col w-2/3 p-2 gap-2 border border-gray-800 rounded-lg">
-						<h1 className="text-sm">
+					<div className='flex flex-col w-2/3 p-2 gap-2 border border-gray-800 rounded-lg'>
+						<h1 className='text-sm'>
 							Selling {baseCoin.symbol} at rate
 						</h1>
-						<div className="flex justify-between items-center">
+						<div className='flex justify-between items-center'>
 							<input
-								type="number"
-								placeholder="0.00"
-								className="bg-transparent border-none w-2/3 outline-none text-white"
+								type='number'
+								placeholder='0.00'
+								className='bg-transparent border-none w-2/3 outline-none text-white'
 								value={limitSellingPrice}
+								onChange={(e) =>
+									setLimitSellingPrice(
+										parseFloat(e.target.value)
+									)
+								}
 							/>
-							<p className="font-semibold">{baseCoin.symbol}</p>
+							<p className='font-semibold'>{baseCoin.symbol}</p>
 						</div>
 					</div>
 				)}
-				<div className="flex flex-col w-1/3 p-2 gap-2 border border-gray-800 rounded-lg">
-					<h1 className="text-sm">Expiry</h1>
-					<select className="bg-transparent border-none outline-none text-white">
+				<div className='flex flex-col w-1/3 p-2 gap-2 border border-gray-800 rounded-lg'>
+					<h1 className='text-sm'>Expiry</h1>
+					<select className='bg-transparent border-none outline-none text-white'>
 						<option>Never</option>
 						<option>10 minutes</option>
 						<option>1 hour</option>
@@ -450,61 +508,66 @@ export default function TokenSelector({
 				disabled={disableButton}
 				onClick={() => {
 					if (!publicKey) {
-						setModalVisible(true);
+						setSignInModalOpen(true);
 					} else {
-						// Do something soon
+						setIsLimitOrderConfirmModalOpen(true);
 					}
 				}}
 				className={`w-full rounded-lg p-3 font-bold bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 hover:bg-orange-400/30 text-white transition-all active:scale-95 duration-400 ${
-					!quoteResponse && publicKey ? "pointer-events-none" : ""
+					!quoteResponse && publicKey ? 'pointer-events-none' : ''
 				} disabled:from-gray-600/50 disabled:to-gray-600/20 disabled:pointer-events-none`}
 			>
 				{!publicKey
-					? "Connect Wallet"
-					: (baseCoinBalance != "Loading..."
+					? 'Login or Sign Up'
+					: (baseCoinBalance != 'Loading...'
 							? parseFloat(baseCoinBalance)
 							: 0) < sellingAmount
-					? "Insufficient Funds"
+					? 'Insufficient Funds'
 					: !quoteResponse
-					? "Enter an amount"
-					: "Place Limit Order"}
+					? 'Enter an amount'
+					: 'Place Limit Order'}
 			</button>
 
-			{/* Modal Logic */}
+			{/* Token Selector Modal Logic */}
 			{isModalOpen && (
-				<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-					<div className="bg-neutral-900 rounded-lg shadow-lg p-6 w-96">
-						<h2 className="text-white text-xl font-bold mb-4">
+				<div className='fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50'>
+					<div className='bg-neutral-900 rounded-lg shadow-lg p-6 w-96'>
+						<h2 className='text-white text-xl font-bold mb-4'>
 							Select a Token
 						</h2>
 						{/* Search Bar */}
 						<input
-							type="text"
-							placeholder="Search tokens..."
-							className="w-full p-3 mb-4 bg-neutral-800 text-white rounded-lg"
+							type='text'
+							placeholder='Search tokens...'
+							className='w-full p-3 mb-4 bg-neutral-800 text-white rounded-lg'
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 						/>
 						{/* Token List */}
-						<div className="max-h-80 overflow-y-auto">
+						<div className='max-h-80 overflow-y-auto'>
 							{filteredTokens.map((token) => (
 								<button
 									key={token.address}
 									onClick={() => handleTokenSelect(token)}
-									className="flex items-center gap-4 p-3 hover:bg-neutral-800 rounded-lg w-full text-left"
+									className='flex items-center gap-4 p-3 hover:bg-neutral-800 rounded-lg w-full text-left'
 								>
 									<img
-										src={token.logoURI}
-										alt={token.symbol}
-										loading="lazy"
-										className="w-8 h-8 rounded-full"
+										src={
+											token.logoURI &&
+											token.logoURI.trim() !== ''
+												? token.logoURI
+												: '/no-image-icon-6.png'
+										}
+										alt={token.symbol ?? 'unknown token'}
+										loading='lazy'
+										className='w-8 h-8 rounded-full'
 										onError={(e) => {
 											e.preventDefault();
 											(e.target as HTMLImageElement).src =
-												"/no-image-icon-6.png";
+												'/no-image-icon-6.png';
 										}}
 									/>
-									<span className="text-white">
+									<span className='text-white'>
 										{token.symbol}
 									</span>
 								</button>
@@ -512,11 +575,56 @@ export default function TokenSelector({
 						</div>
 						{/* Close Button */}
 						<button
-							className="w-full p-3 mt-4 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-all"
+							className='w-full p-3 mt-4 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-all'
 							onClick={() => setIsModalOpen(null)}
 						>
 							Close
 						</button>
+					</div>
+				</div>
+			)}
+
+			{/* Limit Order Confirm Modal Logic */}
+			{isLimitOrderConfirmModalOpen && (
+				<div className='fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50'>
+					<div className='bg-neutral-900 rounded-lg shadow-lg p-6 w-[30rem]'>
+						<h2 className='text-white text-xl font-bold mb-4'>
+							Confirm Limit Order
+						</h2>
+						<p className='text-gray-400 mb-4'>
+							Are you sure you want to place this limit order?
+						</p>
+						<div className='flex flex-col gap-2 mb-4'>
+							<div className='flex justify-between gap-2'>
+								<span className='text-white border w-full rounded-lg p-2 border-neutral-800'>
+									{limitOrderType === 'buy'
+										? `Buying ${quoteCoin.symbol} at ${limitBuyingPrice}`
+										: `Selling ${limitSellingPrice} ${baseCoin.symbol}`}
+								</span>
+								<span className='text-white w-full border rounded-lg p-2 border-neutral-800'>
+									{limitOrderType === 'buy'
+										? `For ${sellingAmount} ${baseCoin.symbol}`
+										: `Buying ${buyingAmount} ${quoteCoin.symbol}`}
+								</span>
+							</div>
+							<span className='text-gray-400'>Expiry: Never</span>
+						</div>
+						<div className='flex gap-2'>
+							<button
+								className='w-full h-fit p-3 font-medium bg-gradient-to-br from-orange-600/50 to-orange-600/10 bg-orange-600/20 hover:bg-orange-400/30 text-white rounded-lg transition-all'
+								onClick={handlePlaceLimitOrder}
+							>
+								Confirm
+							</button>
+							<button
+								className='w-full h-fit font-medium p-3 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-all'
+								onClick={() =>
+									setIsLimitOrderConfirmModalOpen(false)
+								}
+							>
+								Cancel
+							</button>
+						</div>
 					</div>
 				</div>
 			)}
