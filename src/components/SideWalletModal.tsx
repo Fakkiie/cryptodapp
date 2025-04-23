@@ -9,7 +9,8 @@ interface SideWalletModalProps {
 	setIsSideModalOpen: (isOpen: boolean) => void;
 	publicKey: string | null;
 	loggedIn: boolean;
-	setLoggedIn: (isLoggedIn: boolean) => void;
+	logout: () => void;
+	notifySuccess: (msg: string) => void;
 }
 
 export default function SideWalletModal({
@@ -17,7 +18,8 @@ export default function SideWalletModal({
 	setIsSideModalOpen,
 	publicKey,
 	loggedIn,
-	setLoggedIn,
+	logout,
+	notifySuccess,
 }: SideWalletModalProps) {
 	const endpoint = useContext(ConnectionContext);
 	const [shownPublicKey, setShownPublicKey] = useState<string | null>(null);
@@ -142,9 +144,9 @@ export default function SideWalletModal({
 						{/* Disconnect Button */}
 						<button
 							onClick={() => {
-								turnkey?.logout();
-								setLoggedIn(false);
+								logout();
 								setIsSideModalOpen(false);
+								notifySuccess("Logged out successfully")
 							}}
 							className='rounded-full transition-all border border-transparent hover:border-white/20 hover:bg-white/10 p-2 active:scale-95'
 						>

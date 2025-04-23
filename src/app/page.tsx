@@ -170,6 +170,12 @@ export default function Home() {
 		console.log('loggedIn', loggedIn);
 	}, [loggedIn]);
 
+	const logout = () => {
+		setLoggedIn(false);
+		turnkey?.logout();
+		setPublicKey(null);
+	}
+
 	return (
 		<div className='min-h-screen text-white flex flex-col items-center overflow-hidden bg-neutral-800'>
 			<ToastContainer
@@ -193,7 +199,8 @@ export default function Home() {
 							setIsSideModalOpen={setIsSideModalOpen}
 							publicKey={publicKey}
 							loggedIn={loggedIn}
-							setLoggedIn={setLoggedIn}
+							logout={logout}
+							notifySuccess={notifySuccess}
 						/>
 						<header className='w-full bg-neutral-900 shadow-md py-4 px-6 flex justify-between items-center'>
 							<Image
