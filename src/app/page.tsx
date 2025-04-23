@@ -21,7 +21,7 @@ import { ToastContainer, toast, Slide } from 'react-toastify';
 
 const API_SOL_NETWORK_URL =
 	process.env.NEXT_PUBLIC_API_SOL_NETWORK_URL ??
-	'https://mainnet.helius-rpc.com/?api-key=b4a36c5c-6a46-4d24-8384-ee428bea8fa8';
+	'https://api.mainnet-beta.solana.com/';
 const API_SOL_NETWORK_KEY = process.env.NEXT_PUBLIC_API_SOL_NETWORK_KEY ?? '';
 
 export default function Home() {
